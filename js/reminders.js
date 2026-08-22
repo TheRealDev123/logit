@@ -1,8 +1,7 @@
 /**
- * Log it - Customizable Toothbrush Reminder System
+ * Log it - Reliable Toothbrush Reminder System (Mobile & PWA Fixed)
  */
 
-// Load custom times (Defaults: 09:30 and 21:30)
 let morningTime = localStorage.getItem("logit_morning_time") || "09:30";
 let eveningTime = localStorage.getItem("logit_evening_time") || "21:30";
 
@@ -51,26 +50,26 @@ function handleSaveCustomTimes(e) {
   localStorage.setItem("logit_morning_time", morningTime);
   localStorage.setItem("logit_evening_time", eveningTime);
 
-  // Reset triggers
-  triggeredAlerts = { morning: false, evening: false };
   updateTimeLabels();
   toggleTimeSettings();
   checkScheduledTimeAndCountdown();
-  alert(`Reminder times updated to ${format12Hour(morningTime)} & ${format12Hour(eveningTime)}!`);
+  alert(`Alert times updated to ${format12Hour(morningTime)} and ${format12Hour(eveningTime)}!`);
 }
 
-function requestNotificationPermission() {
+// Permission Request
+async function requestNotificationPermission() {
   if (!("Notification" in window)) {
     return alert("Desktop notifications are not supported in this browser.");
   }
-  Notification.requestPermission().then((perm) => {
-    updateNotifyButton();
-    if (perm === "granted") {
-      new Notification("Log it Reminders Enabled! 🪥", {
-        body: `You will receive alerts at ${format12Hour(morningTime)} and ${format12Hour(eveningTime)}.`,
-      });
-    }
-  });
+  
+  const perm = await Notification.requestPermission();
+  updateNotifyButton();
+  
+  if (perm === "granted") {
+    sendPushAlert("Reminders Active! 🪥", `Alerts set for ${format12Hour(morningTime)} and ${format12Hour(eveningTime)}.`);
+  } else {
+    alert("Notification permission was denied. Please allow notifications in Chrome Site Settings.");
+  }
 }
 
 function updateNotifyButton() {
@@ -84,78 +83,141 @@ function updateNotifyButton() {
   if (Notification.permission === "granted") {
     btn.textContent = "🔔 Reminders Active";
     btn.classList.remove("btn-outline");
+    btn.style.backgroundColor = "#16a34a";
+    btn.style.color = "#fff";
   } else {
-    btn.textContent = "🔔 Enable Push Reminders";
+    btn.textContent = "🔔 Enable Reminders";
     btn.classList.add("btn-outline");
+    btn.style.backgroundColor = "transparent";
+    btn.style.color = "var(--text)";
   }
 }
 
+// Audio Synthesis Chime (Works on Android & iOS)
 function playBrushChime() {
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = ctx.createOscillator();
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    
+    // Play dual-tone chime
+    const osc1 = ctx.createOscillator();
+    const osc2 = ctx.createOscillator();
     const gain = ctx.createGain();
-    osc.type = "sine";
-    osc.frequency.setValueAtTime(587.33, ctx.currentTime);
-    osc.frequency.setValueAtTime(880, ctx.currentTime + 0.15);
-    gain.gain.setValueAtTime(0.2, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.7);
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start();
-    osc.stop(ctx.currentTime + 0.7);
-  } catch (e) {}
-}
 
-function notifyBrush(periodTimeFormatted) {
-  playBrushChime();
-  if ("Notification" in window && Notification.permission === "granted") {
-    new Notification("Time to Brush Your Teeth! 🪥", {
-      body: `It is ${periodTimeFormatted}! Keep your smile clean and healthy.`,
-    });
-  } else {
-    alert(`⏰ ${periodTimeFormatted}: Time to brush your teeth! 🪥`);
+    osc1.type = "sine";
+    osc2.type = "sine";
+    osc1.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
+    osc2.frequency.setValueAtTime(880, ctx.currentTime + 0.15); // A5
+
+    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.8);
+
+    osc1.connect(gain);
+    osc2.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc1.start();
+    osc2.start(ctx.currentTime + 0.15);
+    osc1.stop(ctx.currentTime + 0.8);
+    osc2.stop(ctx.currentTime + 0.8);
+  } catch (e) {
+    console.warn("Audio chime autoplay prevented:", e);
   }
 }
 
-let triggeredAlerts = { morning: false, evening: false };
+// Android Service-Worker Safe Push Notification
+async function sendPushAlert(title, bodyText) {
+  playBrushChime();
+
+  // 1. Try Service Worker Notification (Required for Android Chrome / Pixel 8a)
+  if ('serviceWorker' in navigator) {
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      if (reg && reg.showNotification) {
+        await reg.showNotification(title, {
+          body: bodyText,
+          icon: "https://img.icons8.com/color/96/toothbrush.png",
+          badge: "https://img.icons8.com/color/96/toothbrush.png",
+          vibrate: [200, 100, 200, 100, 200],
+          tag: "brush-reminder",
+          renotify: true,
+          requireInteraction: true
+        });
+        return;
+      }
+    } catch (err) {
+      console.warn("Service Worker notification fallback:", err);
+    }
+  }
+
+  // 2. Fallback to standard Window Notification
+  if ("Notification" in window && Notification.permission === "granted") {
+    new Notification(title, {
+      body: bodyText,
+      icon: "https://img.icons8.com/color/96/toothbrush.png",
+      vibrate: [200, 100, 200]
+    });
+  } else {
+    alert(`⏰ ${title}\n${bodyText}`);
+  }
+}
+
+// Test Button Handler
+function testNotificationNow() {
+  sendPushAlert(
+    "Test Reminder Working! 🪥✨", 
+    `Your sound and notifications are working properly on your device.`
+  );
+}
+
+// -------------------------------------------------------------
+// RELIABLE TIME TRIGGER LOGIC (Handles phone sleep & missed minutes)
+// -------------------------------------------------------------
+function getTodayDateString() {
+  return new Date().toISOString().split("T")[0];
+}
 
 function checkScheduledTimeAndCountdown() {
   const now = new Date();
-  const hours = now.getHours();
-  const mins = now.getMinutes();
-
-  if (hours === 0 && mins === 0) {
-    triggeredAlerts.morning = false;
-    triggeredAlerts.evening = false;
-  }
+  const todayStr = getTodayDateString();
+  const currentTotalMins = now.getHours() * 60 + now.getMinutes();
 
   const [mH, mM] = morningTime.split(":").map(Number);
+  const morningTotalMins = mH * 60 + mM;
+
   const [eH, eM] = eveningTime.split(":").map(Number);
+  const eveningTotalMins = eH * 60 + eM;
 
-  // Trigger Morning Alert
-  if (hours === mH && mins === mM && !triggeredAlerts.morning) {
-    triggeredAlerts.morning = true;
-    notifyBrush(format12Hour(morningTime));
+  // Morning check: If current time is past morning alert time today and haven't alerted today yet
+  const lastMorningAlert = localStorage.getItem("logit_last_morning_alert");
+  if (currentTotalMins >= morningTotalMins && currentTotalMins < morningTotalMins + 120) {
+    if (lastMorningAlert !== todayStr) {
+      localStorage.setItem("logit_last_morning_alert", todayStr);
+      sendPushAlert("Time to Brush! 🪥 (Morning)", `It's time for your ${format12Hour(morningTime)} morning brush.`);
+    }
   }
 
-  // Trigger Evening Alert
-  if (hours === eH && mins === eM && !triggeredAlerts.evening) {
-    triggeredAlerts.evening = true;
-    notifyBrush(format12Hour(eveningTime));
+  // Evening check: If current time is past evening alert time today and haven't alerted today yet
+  const lastEveningAlert = localStorage.getItem("logit_last_evening_alert");
+  if (currentTotalMins >= eveningTotalMins && currentTotalMins < eveningTotalMins + 120) {
+    if (lastEveningAlert !== todayStr) {
+      localStorage.setItem("logit_last_evening_alert", todayStr);
+      sendPushAlert("Time to Brush! 🪥 (Evening)", `It's time for your ${format12Hour(eveningTime)} evening brush.`);
+    }
   }
 
-  // Dynamic Countdown calculation
+  // Live Countdown Display
   const tMorn = new Date(); tMorn.setHours(mH, mM, 0, 0);
   const tEve = new Date(); tEve.setHours(eH, eM, 0, 0);
 
   let target = tMorn;
-  if (tMorn < tEve) {
-    if (now > tMorn && now <= tEve) target = tEve;
-    else if (now > tEve) target = new Date(tMorn.getTime() + 24 * 60 * 60 * 1000);
+  if (now < tMorn) {
+    target = tMorn;
+  } else if (now >= tMorn && now < tEve) {
+    target = tEve;
   } else {
-    if (now > tEve && now <= tMorn) target = tMorn;
-    else if (now > tMorn) target = new Date(tEve.getTime() + 24 * 60 * 60 * 1000);
+    target = new Date(tMorn.getTime() + 24 * 60 * 60 * 1000);
   }
 
   const diff = target - now;
@@ -165,7 +227,7 @@ function checkScheduledTimeAndCountdown() {
 
   const countdownElem = document.getElementById("countdownDisplay");
   if (countdownElem) {
-    countdownElem.textContent = `Next reminder in: ${h}h ${m}m ${s}s (${target.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})})`;
+    countdownElem.textContent = `Next alert in: ${h}h ${m}m ${s}s (${target.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})})`;
   }
 }
 
@@ -178,7 +240,7 @@ async function toggleBrushStatus(period) {
     await callApi({
       action: "toggleBrush",
       userId: currentUser.userId,
-      date: new Date().toISOString().split("T")[0],
+      date: getTodayDateString(),
       period: period,
       status: isChecked
     });
