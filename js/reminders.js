@@ -1,11 +1,24 @@
 /**
- * Log it - Reliable Toothbrush Reminder System (Mobile & PWA Fixed)
+ * Log it — Complete Toothbrush Reminder & Notification Engine
+ * File Path: js/reminders.js
+ * 
+ * Features:
+ * - Customizable morning & evening alert times (defaults: 09:30 & 21:30)
+ * - Android Service Worker push notifications + vibration for Google Pixel 8a
+ * - Web Audio API synthesized alert chime
+ * - Missed-alarm catch-up logic (fires even if the phone screen was asleep)
+ * - Dynamic 12-hour countdown display
+ * - One-tap test alert button handler
+ * - Google Sheets habit synchronization
  */
 
+// 1. Load custom times from storage (Defaults: 09:30 and 21:30)
 let morningTime = localStorage.getItem("logit_morning_time") || "09:30";
 let eveningTime = localStorage.getItem("logit_evening_time") || "21:30";
 
+// Helper: Convert 24-hour time "09:30" or "21:30" to "9:30 AM" / "9:30 PM"
 function format12Hour(timeStr) {
+  if (!timeStr) return "";
   const [hStr, mStr] = timeStr.split(":");
   let h = parseInt(hStr, 10);
   const ampm = h >= 12 ? "PM" : "AM";
@@ -13,6 +26,7 @@ function format12Hour(timeStr) {
   return `${h}:${mStr} ${ampm}`;
 }
 
+// 2. Update all UI labels, checkboxes, and input pickers across the app
 function updateTimeLabels() {
   const mornFormatted = format12Hour(morningTime);
   const eveFormatted = format12Hour(eveningTime);
@@ -32,12 +46,14 @@ function updateTimeLabels() {
   if (eveInp) eveInp.value = eveningTime;
 }
 
+// 3. Toggle the custom time picker settings panel
 function toggleTimeSettings() {
   const panel = document.getElementById("timeSettingsPanel");
   if (!panel) return;
   panel.style.display = panel.style.display === "none" ? "block" : "none";
 }
 
+// 4. Save new custom morning & evening times
 function handleSaveCustomTimes(e) {
   e.preventDefault();
   const m = document.getElementById("morningTimeInput").value;
@@ -56,22 +72,26 @@ function handleSaveCustomTimes(e) {
   alert(`Alert times updated to ${format12Hour(morningTime)} and ${format12Hour(eveningTime)}!`);
 }
 
-// Permission Request
+// 5. Request browser notification permissions
 async function requestNotificationPermission() {
   if (!("Notification" in window)) {
-    return alert("Desktop notifications are not supported in this browser.");
+    return alert("Notifications are not supported on this browser.");
   }
-  
+
   const perm = await Notification.requestPermission();
   updateNotifyButton();
-  
+
   if (perm === "granted") {
-    sendPushAlert("Reminders Active! 🪥", `Alerts set for ${format12Hour(morningTime)} and ${format12Hour(eveningTime)}.`);
+    sendPushAlert(
+      "Reminders Active! 🪥", 
+      `Alerts set for ${format12Hour(morningTime)} and ${format12Hour(eveningTime)}.`
+    );
   } else {
-    alert("Notification permission was denied. Please allow notifications in Chrome Site Settings.");
+    alert("Notification permission was denied. Please enable notifications in your browser/site settings.");
   }
 }
 
+// Update the top notification status button state
 function updateNotifyButton() {
   const btn = document.getElementById("notifyBtn");
   if (!btn) return;
@@ -80,27 +100,29 @@ function updateNotifyButton() {
     btn.textContent = "Notifications Unsupported";
     return;
   }
+
   if (Notification.permission === "granted") {
     btn.textContent = "🔔 Reminders Active";
     btn.classList.remove("btn-outline");
     btn.style.backgroundColor = "#16a34a";
-    btn.style.color = "#fff";
+    btn.style.color = "#ffffff";
+    btn.style.borderColor = "#16a34a";
   } else {
-    btn.textContent = "🔔 Enable Reminders";
+    btn.textContent = "🔔 Enable Push Reminders";
     btn.classList.add("btn-outline");
     btn.style.backgroundColor = "transparent";
     btn.style.color = "var(--text)";
+    btn.style.borderColor = "var(--border)";
   }
 }
 
-// Audio Synthesis Chime (Works on Android & iOS)
+// 6. Web Audio API alert sound (Dual-tone melodic chime)
 function playBrushChime() {
   try {
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
     if (!AudioCtx) return;
     const ctx = new AudioCtx();
-    
-    // Play dual-tone chime
+
     const osc1 = ctx.createOscillator();
     const osc2 = ctx.createOscillator();
     const gain = ctx.createGain();
@@ -122,16 +144,16 @@ function playBrushChime() {
     osc1.stop(ctx.currentTime + 0.8);
     osc2.stop(ctx.currentTime + 0.8);
   } catch (e) {
-    console.warn("Audio chime autoplay prevented:", e);
+    console.warn("Audio playback was blocked by browser autoplay policy:", e);
   }
 }
 
-// Android Service-Worker Safe Push Notification
+// 7. Send push notifications (Uses Service Worker for Android/Pixel 8a)
 async function sendPushAlert(title, bodyText) {
   playBrushChime();
 
-  // 1. Try Service Worker Notification (Required for Android Chrome / Pixel 8a)
-  if ('serviceWorker' in navigator) {
+  // Try Service Worker notification first (Required for Android Chrome background alerts)
+  if ("serviceWorker" in navigator) {
     try {
       const reg = await navigator.serviceWorker.ready;
       if (reg && reg.showNotification) {
@@ -151,7 +173,7 @@ async function sendPushAlert(title, bodyText) {
     }
   }
 
-  // 2. Fallback to standard Window Notification
+  // Fallback to standard Window Notification
   if ("Notification" in window && Notification.permission === "granted") {
     new Notification(title, {
       body: bodyText,
@@ -163,17 +185,25 @@ async function sendPushAlert(title, bodyText) {
   }
 }
 
-// Test Button Handler
-function testNotificationNow() {
+// 8. One-Tap Test Alert Handler (Asks for permission if not yet granted)
+async function testNotificationNow() {
+  if ("Notification" in window && Notification.permission !== "granted") {
+    const perm = await Notification.requestPermission();
+    updateNotifyButton();
+    if (perm !== "granted") {
+      alert("⚠️ Notifications are blocked in your browser settings. Please allow notifications in Chrome to receive alerts.");
+      playBrushChime();
+      return;
+    }
+  }
+
   sendPushAlert(
-    "Test Reminder Working! 🪥✨", 
-    `Your sound and notifications are working properly on your device.`
+    "Test Alert Working! 🪥✨", 
+    `Your sound, vibration, and push notifications are configured correctly!`
   );
 }
 
-// -------------------------------------------------------------
-// RELIABLE TIME TRIGGER LOGIC (Handles phone sleep & missed minutes)
-// -------------------------------------------------------------
+// 9. Missed-Alarm Catch-up & Countdown Timer
 function getTodayDateString() {
   return new Date().toISOString().split("T")[0];
 }
@@ -189,7 +219,7 @@ function checkScheduledTimeAndCountdown() {
   const [eH, eM] = eveningTime.split(":").map(Number);
   const eveningTotalMins = eH * 60 + eM;
 
-  // Morning check: If current time is past morning alert time today and haven't alerted today yet
+  // Check Morning Alert (Fires if past morning time today and hasn't alerted yet)
   const lastMorningAlert = localStorage.getItem("logit_last_morning_alert");
   if (currentTotalMins >= morningTotalMins && currentTotalMins < morningTotalMins + 120) {
     if (lastMorningAlert !== todayStr) {
@@ -198,7 +228,7 @@ function checkScheduledTimeAndCountdown() {
     }
   }
 
-  // Evening check: If current time is past evening alert time today and haven't alerted today yet
+  // Check Evening Alert (Fires if past evening time today and hasn't alerted yet)
   const lastEveningAlert = localStorage.getItem("logit_last_evening_alert");
   if (currentTotalMins >= eveningTotalMins && currentTotalMins < eveningTotalMins + 120) {
     if (lastEveningAlert !== todayStr) {
@@ -207,7 +237,7 @@ function checkScheduledTimeAndCountdown() {
     }
   }
 
-  // Live Countdown Display
+  // Dynamic Countdown Calculation
   const tMorn = new Date(); tMorn.setHours(mH, mM, 0, 0);
   const tEve = new Date(); tEve.setHours(eH, eM, 0, 0);
 
@@ -231,6 +261,7 @@ function checkScheduledTimeAndCountdown() {
   }
 }
 
+// 10. Sync Morning/Evening Checkbox to Google Sheets
 async function toggleBrushStatus(period) {
   if (!currentUser) return;
   const checkbox = document.getElementById(period === "morning" ? "brushMorning" : "brushEvening");
@@ -245,6 +276,7 @@ async function toggleBrushStatus(period) {
       status: isChecked
     });
   } catch (err) {
+    // Revert checkmark if cloud sync fails
     checkbox.checked = !isChecked;
   }
 }
