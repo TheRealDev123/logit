@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <!-- Optimized viewport for Google Pixel 8a & Mobile Browsers -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#ffffff" />
+  <meta name="description" content="Track your health goals, weight, habits, and reminders with Log it." />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icons/icon-192.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icons/icon-192.svg" />
+  <title>Log it — Health & Habit Tracker</title>
+  
+  <!-- Mobile-First Light Mode Stylesheet -->
+  <link rel="stylesheet" href="css/style.css" />
+  
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <nav>
+    <div class="brand" onclick="showView('home')">
+      <span class="brand-icon">📝</span> Log it
+    </div>
+    <div class="nav-links">
+      <div id="loggedOutNav">
+        <button class="btn btn-outline btn-sm" onclick="showView('login')">Sign In</button>
+        <button class="btn btn-sm" onclick="showView('signup')">Sign Up</button>
+      </div>
+      <div id="loggedInNav" style="display: none;">
+        <span id="navUserName" class="user-badge">@user</span>
+        <button class="btn btn-outline btn-sm" onclick="logout()">Log Out</button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container">
+
+    <!-- 1. HOME / LANDING VIEW -->
+    <section id="homeView" class="view-section active">
+      <div class="hero">
+        <div class="hero-tag">🎯 Health & Habit Tracking</div>
+        <h1>Set Your Goals.<br />Effortlessly <span>Log it</span>.</h1>
+        <p>
+          Track your weight journey, monitor goal progress with smart color-coded indicators, and receive customizable teeth-brushing reminders—all stored in your Google Sheets.
+        </p>
+        <div class="hero-actions">
+          <button class="btn btn-lg btn-full-mobile" onclick="checkAuthAndRedirect()">Get Started Now &rarr;</button>
+        </div>
+
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon">🎯</div>
+            <h3>Smart Goal Tracking</h3>
+            <p>Set a weight goal and see the percentage you are closer to it. The visual bar turns red if you are over target and green when you achieve it.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">⏰</div>
+            <h3>Custom Reminder Times</h3>
+            <p>Choose your own morning and evening times for brushing reminders. Receive automated chimes and browser push notifications.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">📊</div>
+            <h3>Google Sheets Cloud</h3>
+            <p>Private and free. All your user logins, daily weights, and routines stay synced directly inside your Google Sheet.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. LOGIN VIEW -->
+    <section id="loginView" class="view-section">
+      <div class="form-box">
+        <h2>Sign In to <span>Log it</span></h2>
+        <p class="form-subtext">Enter your username and password</p>
+        
+        <form id="loginForm" onsubmit="handleLogin(event)">
+          <div class="form-group">
+            <label for="loginUsername">Username</label>
+            <input type="text" id="loginUsername" placeholder="e.g. alex24" autocomplete="username" autocapitalize="none" required />
+          </div>
+          <div class="form-group">
+            <label for="loginPassword">Password</label>
+            <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password" required />
+          </div>
+          <button type="submit" id="loginBtn" class="btn btn-full">Sign In</button>
+          
+          <p class="form-footer">
+            Don't have an account? <a href="#" onclick="showView('signup')">Sign Up</a>
+          </p>
+        </form>
+      </div>
+    </section>
+
+    <!-- 3. SIGN UP VIEW -->
+    <section id="signupView" class="view-section">
+      <div class="form-box">
+        <h2>Create an Account</h2>
+        <p class="form-subtext">Choose a unique username to get started</p>
+        
+        <form id="signupForm" onsubmit="handleSignup(event)">
+          <div class="form-group">
+            <label for="signupName">Full Name</label>
+            <input type="text" id="signupName" placeholder="Alex Morgan" required />
+          </div>
+          <div class="form-group">
+            <label for="signupUsername">Choose a Username</label>
+            <input type="text" id="signupUsername" placeholder="e.g. alex24" pattern="[a-zA-Z0-9_]{3,20}" title="3-20 letters, numbers, or underscores" autocomplete="username" autocapitalize="none" required />
+          </div>
+          <div class="form-group">
+            <label for="signupPassword">Password</label>
+            <input type="password" id="signupPassword" minlength="6" placeholder="At least 6 characters" autocomplete="new-password" required />
+          </div>
+          <button type="submit" id="signupBtn" class="btn btn-full">Create Account</button>
+          
+          <p class="form-footer">
+            Already have an account? <a href="#" onclick="showView('login')">Sign In</a>
+          </p>
+        </form>
+      </div>
+    </section>
+
+    <!-- 4. DASHBOARD VIEW -->
+    <section id="dashView" class="view-section">
+      
+      <!-- Top Status Header -->
+      <div class="dash-header">
+        <div class="sync-status">
+          <span class="sync-dot" id="syncDot"></span>
+          <span id="syncText">Connected to Google Sheets</span>
+        </div>
+        <button id="notifyBtn" class="btn btn-outline btn-sm" onclick="requestNotificationPermission()">
+          🔔 Enable Push Reminders
+        </button>
+      </div>
+
+      <!-- Toothbrush Reminder Card with Custom Times -->
+      <div class="card brush-banner">
+        <div class="brush-content">
+          <div>
+            <div class="brush-title-row">
+              <h2 class="card-title" style="margin-bottom: 0;">🪥 Toothbrush Schedule</h2>
+              <button class="btn btn-sm btn-outline" onclick="toggleTimeSettings()" style="padding: 4px 8px; font-size: 0.75rem;">
+                ✏️ Edit Times
+              </button>
+            </div>
+            <p class="card-desc" style="margin-top: 4px;">
+              Alerts at <strong id="morningTimeLabel">9:30 AM</strong> & <strong id="eveningTimeLabel">9:30 PM</strong>.
+            </p>
+            <div id="countdownDisplay" class="countdown-badge">Calculating next reminder...</div>
+          </div>
+          
+          <div class="habit-checklist">
+            <label class="habit-item">
+              <span id="chkMorningLabel">☀️ Morning (9:30 AM)</span>
+              <input type="checkbox" id="brushMorning" onchange="toggleBrushStatus('morning')" />
+            </label>
+            <label class="habit-item">
+              <span id="chkEveningLabel">🌙 Evening (9:30 PM)</span>
+              <input type="checkbox" id="brushEvening" onchange="toggleBrushStatus('evening')" />
+            </label>
+          </div>
+        </div>
+
+        <!-- Collapsible Custom Time Editor -->
+        <div id="timeSettingsPanel" class="time-settings-panel" style="display: none;">
+          <form onsubmit="handleSaveCustomTimes(event)" class="time-settings-form">
+            <div class="time-inputs-container">
+              <div class="time-input-group">
+                <label for="morningTimeInput">Morning Alert</label>
+                <input type="time" id="morningTimeInput" value="09:30" required />
+              </div>
+              <div class="time-input-group">
+                <label for="eveningTimeInput">Evening Alert</label>
+                <input type="time" id="eveningTimeInput" value="21:30" required />
+              </div>
+            </div>
+            <button type="submit" class="btn btn-sm btn-full-mobile" style="margin-top: 8px;">Save Alert Times</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Goal Progress Card (Red Bar when Over Weight) -->
+      <div class="card goal-card">
+        <div class="goal-header">
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+              <h2 class="card-title" style="margin-bottom: 0;">🎯 Weight Goal Status</h2>
+              <span id="goalStatusBadge" class="status-pill status-neutral">No Goal Set</span>
+            </div>
+            <p class="card-desc" id="goalSummaryText" style="margin-top: 4px;">
+              Set a target goal to track your trajectory.
+            </p>
+          </div>
+          <form id="goalForm" onsubmit="handleSetGoal(event)" class="goal-input-form">
+            <input type="number" step="0.1" id="goalInput" placeholder="Target weight" required />
+            <button type="submit" id="saveGoalBtn" class="btn btn-sm">Set Goal</button>
+          </form>
+        </div>
+
+        <!-- Dynamic Progress Bar -->
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="goalProgressBar" style="width: 0%;"></div>
+        </div>
+        
+        <div class="progress-labels">
+          <span id="progressStartLabel">Start: --</span>
+          <span id="progressPctLabel" style="font-weight: 700;">0% completed</span>
+          <span id="progressGoalLabel">Goal: --</span>
+        </div>
+      </div>
+
+      <!-- Dashboard Main Grid: Log Form + Chart/Stats -->
+      <div class="dash-grid">
+        
+        <!-- Weight Log Entry Form -->
+        <div class="card">
+          <h2 class="card-title">⚖️ Log Weight</h2>
+          <form id="weightForm" onsubmit="handleSaveWeight(event)">
+            <div class="form-group">
+              <label for="weightDate">Date</label>
+              <input type="date" id="weightDate" required />
+            </div>
+            <div class="form-group">
+              <label for="weightVal">Weight (<span id="unitLabel">kg</span>)</label>
+              <input type="number" step="0.1" id="weightVal" placeholder="e.g. 74.2" required />
+            </div>
+            <div class="form-group">
+              <label for="weightUnit">Unit Preference</label>
+              <select id="weightUnit" onchange="switchUnit(this.value)">
+                <option value="kg">Kilograms (kg)</option>
+                <option value="lbs">Pounds (lbs)</option>
+              </select>
+            </div>
+            <button type="submit" id="saveWeightBtn" class="btn btn-full">Save Entry</button>
+          </form>
+        </div>
+
+        <!-- Metric Cards & Visual Chart -->
+        <div class="card">
+          <h2 class="card-title">📈 Progress Overview</h2>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-label">Start</div>
+              <div class="stat-val" id="statStart">--</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Current</div>
+              <div class="stat-val" id="statCurrent">--</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label" id="statToGoalLabel">Difference</div>
+              <div class="stat-val" id="statToGoal">--</div>
+            </div>
+          </div>
+          
+          <div class="chart-container">
+            <canvas id="weightChart"></canvas>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Log History Table -->
+      <div class="card">
+        <h2 class="card-title">📋 Weight Logs History</h2>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Weight</th>
+                <th style="text-align: right;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="historyTableBody">
+              <tr>
+                <td colspan="3" class="table-empty">Loading records...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Modular Scripts -->
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/reminders.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/pwa.js"></script>
+</body>
+</html>
