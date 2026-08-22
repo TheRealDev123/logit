@@ -2,18 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <!-- Optimized for Google Pixel 8a and mobile screens -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
   <meta name="theme-color" content="#0284c7" />
   <title>Log it — Health & Habit Tracker</title>
   
-  <!-- Web App Manifest -->
   <link rel="manifest" href="manifest.json" />
-  
-  <!-- Light Mode Stylesheet -->
   <link rel="stylesheet" href="css/style.css" />
-  
-  <!-- Chart.js CDN for Weight Graphs -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -23,12 +17,19 @@
     <div class="brand" onclick="showView('home')">
       <span class="brand-icon">📝</span> Log it
     </div>
+    
     <div class="nav-links">
-      <div id="loggedOutNav">
+      <!-- Blue Test Alert Button Always Visible at Top -->
+      <button class="btn btn-sm" onclick="testNotificationNow()" style="background-color: #0284c7; color: #ffffff; font-weight: 700; border: none; padding: 7px 14px; box-shadow: 0 2px 5px rgba(2,132,199,0.35);">
+        🧪 Test Alert
+      </button>
+
+      <div id="loggedOutNav" style="display: flex; gap: 8px;">
         <button class="btn btn-outline btn-sm" onclick="showView('login')">Sign In</button>
         <button class="btn btn-sm" onclick="showView('signup')">Sign Up</button>
       </div>
-      <div id="loggedInNav" style="display: none;">
+      
+      <div id="loggedInNav" style="display: none; align-items: center; gap: 8px;">
         <span id="navUserName" class="user-badge">@user</span>
         <button class="btn btn-outline btn-sm" onclick="logout()">Log Out</button>
       </div>
@@ -37,33 +38,35 @@
 
   <main class="container">
 
-    <!-- 1. HOME / LANDING VIEW -->
+    <!-- 1. HOME VIEW -->
     <section id="homeView" class="view-section active">
       <div class="hero">
         <div class="hero-tag">🎯 Health & Habit Tracking</div>
         <h1>Set Your Goals.<br />Effortlessly <span>Log it</span>.</h1>
         <p>
-          Track your weight journey, monitor goal progress with smart color-coded indicators, and receive customizable teeth-brushing reminders—all stored in your Google Sheets.
+          Track your weight journey, monitor goal progress with color-coded indicators, and receive custom teeth-brushing reminders—synced to Google Sheets.
         </p>
-        <div class="hero-actions">
-          <button class="btn btn-lg btn-full-mobile" onclick="checkAuthAndRedirect()">Get Started Now &rarr;</button>
+        
+        <div class="hero-actions" style="display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; width: 100%;">
+          <button class="btn btn-lg" style="flex: 1; min-width: 180px; max-width: 240px;" onclick="checkAuthAndRedirect()">Get Started Now &rarr;</button>
+          <button class="btn btn-lg" style="background-color: #0284c7; color: #fff; font-weight: 700; flex: 1; min-width: 180px; max-width: 240px;" onclick="testNotificationNow()">🧪 Test Sound & Push</button>
         </div>
 
         <div class="features-grid">
           <div class="feature-card">
             <div class="feature-icon">🎯</div>
             <h3>Smart Goal Tracking</h3>
-            <p>Set a weight goal and see the percentage you are closer to it. The visual bar turns red if you are over target and green when you achieve it.</p>
+            <p>Visual bar turns red if you are over target and green when you achieve it.</p>
           </div>
           <div class="feature-card">
             <div class="feature-icon">⏰</div>
             <h3>Custom Reminder Times</h3>
-            <p>Choose your own morning and evening times for brushing reminders. Receive automated chimes and browser push notifications.</p>
+            <p>Choose your morning and evening alert times with browser push notifications.</p>
           </div>
           <div class="feature-card">
             <div class="feature-icon">📊</div>
             <h3>Google Sheets Cloud</h3>
-            <p>Private and free. All your user logins, daily weights, and routines stay synced directly inside your Google Sheet.</p>
+            <p>Private and free. All logs stay safely stored inside your own Google Sheet.</p>
           </div>
         </div>
       </div>
@@ -135,18 +138,18 @@
         </button>
       </div>
 
-      <!-- Toothbrush Reminder Card with Visible Blue Test Button -->
+      <!-- Toothbrush Reminder Card -->
       <div class="card brush-banner">
         <div class="brush-content">
           <div>
             <div class="brush-title-row">
-              <h2 class="card-title" style="margin-bottom: 0;">🪥 Toothbrush Schedule</h2>
+              <h2 class="card-title" style="margin-bottom: 0;">🦷 Toothbrush Schedule</h2>
               <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                <button class="btn btn-sm btn-outline" onclick="toggleTimeSettings()" style="padding: 4px 10px; font-size: 0.75rem;">
+                <button class="btn btn-sm btn-outline" onclick="toggleTimeSettings()" style="padding: 4px 10px; font-size: 0.78rem;">
                   ✏️ Edit Times
                 </button>
-                <!-- Blue Test Alert Button -->
-                <button class="btn btn-sm" onclick="testNotificationNow()" style="padding: 4px 10px; font-size: 0.75rem; background-color: #0284c7; color: #ffffff; font-weight: 700;">
+                <!-- Bright Blue Test Alert Button -->
+                <button class="btn btn-sm" onclick="testNotificationNow()" style="padding: 4px 10px; font-size: 0.78rem; background-color: #0284c7; color: #ffffff; font-weight: 700; border: none; box-shadow: 0 2px 4px rgba(2,132,199,0.3);">
                   🧪 Test Alert
                 </button>
               </div>
@@ -169,7 +172,7 @@
           </div>
         </div>
 
-        <!-- Collapsible Custom Time Editor -->
+        <!-- Custom Time Editor -->
         <div id="timeSettingsPanel" class="time-settings-panel" style="display: none;">
           <form onsubmit="handleSaveCustomTimes(event)" class="time-settings-form">
             <div class="time-inputs-container">
@@ -217,7 +220,7 @@
         </div>
       </div>
 
-      <!-- Dashboard Main Grid: Log Form + Chart/Stats -->
+      <!-- Dashboard Main Grid -->
       <div class="dash-grid">
         
         <!-- Weight Log Entry Form -->
@@ -293,7 +296,6 @@
 
   </main>
 
-  <!-- Modular Scripts -->
   <script src="js/api.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/reminders.js"></script>
