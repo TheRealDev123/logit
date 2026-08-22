@@ -2,19 +2,18 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <!-- Optimized viewport for Google Pixel 8a & Mobile Browsers -->
+  <!-- Optimized for Google Pixel 8a and mobile screens -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#ffffff" />
-  <meta name="description" content="Track your health goals, weight, habits, and reminders with Log it." />
-  <link rel="manifest" href="manifest.webmanifest" />
-  <link rel="icon" href="icons/icon-192.svg" type="image/svg+xml" />
-  <link rel="apple-touch-icon" href="icons/icon-192.svg" />
+  <meta name="theme-color" content="#0284c7" />
   <title>Log it — Health & Habit Tracker</title>
   
-  <!-- Mobile-First Light Mode Stylesheet -->
+  <!-- Web App Manifest -->
+  <link rel="manifest" href="manifest.json" />
+  
+  <!-- Light Mode Stylesheet -->
   <link rel="stylesheet" href="css/style.css" />
   
-  <!-- Chart.js CDN -->
+  <!-- Chart.js CDN for Weight Graphs -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -136,57 +135,40 @@
         </button>
       </div>
 
-      <!-- Toothbrush Reminder Card with Custom Times -->
-      <!-- Toothbrush Reminder Card with Custom Times -->
-    <div class="card brush-banner">
+      <!-- Toothbrush Reminder Card with Visible Blue Test Button -->
+      <div class="card brush-banner">
         <div class="brush-content">
-            <div>
+          <div>
             <div class="brush-title-row">
-                <h2 class="card-title" style="margin-bottom: 0;">🪥 Toothbrush Schedule</h2>
-                <div style="display: flex; gap: 6px;">
-                <button class="btn btn-sm btn-outline" onclick="toggleTimeSettings()" style="padding: 4px 8px; font-size: 0.75rem;">
-                    ✏️ Edit Times
+              <h2 class="card-title" style="margin-bottom: 0;">🪥 Toothbrush Schedule</h2>
+              <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <button class="btn btn-sm btn-outline" onclick="toggleTimeSettings()" style="padding: 4px 10px; font-size: 0.75rem;">
+                  ✏️ Edit Times
                 </button>
-                <button class="btn btn-sm" onclick="testNotificationNow()" style="padding: 4px 8px; font-size: 0.75rem; background-color: #0284c7;">
-                    🧪 Test Alert
+                <!-- Blue Test Alert Button -->
+                <button class="btn btn-sm" onclick="testNotificationNow()" style="padding: 4px 10px; font-size: 0.75rem; background-color: #0284c7; color: #ffffff; font-weight: 700;">
+                  🧪 Test Alert
                 </button>
-                </div>
+              </div>
             </div>
-            <p class="card-desc" style="margin-top: 4px;">
-                Alerts at <strong id="morningTimeLabel">9:30 AM</strong> & <strong id="eveningTimeLabel">9:30 PM</strong>.
+            <p class="card-desc" style="margin-top: 6px;">
+              Alerts at <strong id="morningTimeLabel">9:30 AM</strong> & <strong id="eveningTimeLabel">9:30 PM</strong>.
             </p>
             <div id="countdownDisplay" class="countdown-badge">Calculating next reminder...</div>
-            </div>
-            
-            <div class="habit-checklist">
+          </div>
+          
+          <div class="habit-checklist">
             <label class="habit-item">
-                <span id="chkMorningLabel">☀️ Morning (9:30 AM)</span>
-                <input type="checkbox" id="brushMorning" onchange="toggleBrushStatus('morning')" />
+              <span id="chkMorningLabel">☀️ Morning (9:30 AM)</span>
+              <input type="checkbox" id="brushMorning" onchange="toggleBrushStatus('morning')" />
             </label>
             <label class="habit-item">
-                <span id="chkEveningLabel">🌙 Evening (9:30 PM)</span>
-                <input type="checkbox" id="brushEvening" onchange="toggleBrushStatus('evening')" />
+              <span id="chkEveningLabel">🌙 Evening (9:30 PM)</span>
+              <input type="checkbox" id="brushEvening" onchange="toggleBrushStatus('evening')" />
             </label>
-            </div>
+          </div>
         </div>
 
-        <!-- Collapsible Custom Time Editor -->
-        <div id="timeSettingsPanel" class="time-settings-panel" style="display: none;">
-            <form onsubmit="handleSaveCustomTimes(event)" class="time-settings-form">
-            <div class="time-inputs-container">
-                <div class="time-input-group">
-                <label for="morningTimeInput">Morning Alert</label>
-                <input type="time" id="morningTimeInput" value="09:30" required />
-                </div>
-                <div class="time-input-group">
-                <label for="eveningTimeInput">Evening Alert</label>
-                <input type="time" id="eveningTimeInput" value="21:30" required />
-                </div>
-            </div>
-            <button type="submit" class="btn btn-sm btn-full-mobile" style="margin-top: 8px;">Save Alert Times</button>
-            </form>
-        </div>
-        </div>
         <!-- Collapsible Custom Time Editor -->
         <div id="timeSettingsPanel" class="time-settings-panel" style="display: none;">
           <form onsubmit="handleSaveCustomTimes(event)" class="time-settings-form">
