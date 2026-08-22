@@ -137,33 +137,56 @@
       </div>
 
       <!-- Toothbrush Reminder Card with Custom Times -->
-      <div class="card brush-banner">
+      <!-- Toothbrush Reminder Card with Custom Times -->
+    <div class="card brush-banner">
         <div class="brush-content">
-          <div>
+            <div>
             <div class="brush-title-row">
-              <h2 class="card-title" style="margin-bottom: 0;">🪥 Toothbrush Schedule</h2>
-              <button class="btn btn-sm btn-outline" onclick="toggleTimeSettings()" style="padding: 4px 8px; font-size: 0.75rem;">
-                ✏️ Edit Times
-              </button>
+                <h2 class="card-title" style="margin-bottom: 0;">🪥 Toothbrush Schedule</h2>
+                <div style="display: flex; gap: 6px;">
+                <button class="btn btn-sm btn-outline" onclick="toggleTimeSettings()" style="padding: 4px 8px; font-size: 0.75rem;">
+                    ✏️ Edit Times
+                </button>
+                <button class="btn btn-sm" onclick="testNotificationNow()" style="padding: 4px 8px; font-size: 0.75rem; background-color: #0284c7;">
+                    🧪 Test Alert
+                </button>
+                </div>
             </div>
             <p class="card-desc" style="margin-top: 4px;">
-              Alerts at <strong id="morningTimeLabel">9:30 AM</strong> & <strong id="eveningTimeLabel">9:30 PM</strong>.
+                Alerts at <strong id="morningTimeLabel">9:30 AM</strong> & <strong id="eveningTimeLabel">9:30 PM</strong>.
             </p>
             <div id="countdownDisplay" class="countdown-badge">Calculating next reminder...</div>
-          </div>
-          
-          <div class="habit-checklist">
+            </div>
+            
+            <div class="habit-checklist">
             <label class="habit-item">
-              <span id="chkMorningLabel">☀️ Morning (9:30 AM)</span>
-              <input type="checkbox" id="brushMorning" onchange="toggleBrushStatus('morning')" />
+                <span id="chkMorningLabel">☀️ Morning (9:30 AM)</span>
+                <input type="checkbox" id="brushMorning" onchange="toggleBrushStatus('morning')" />
             </label>
             <label class="habit-item">
-              <span id="chkEveningLabel">🌙 Evening (9:30 PM)</span>
-              <input type="checkbox" id="brushEvening" onchange="toggleBrushStatus('evening')" />
+                <span id="chkEveningLabel">🌙 Evening (9:30 PM)</span>
+                <input type="checkbox" id="brushEvening" onchange="toggleBrushStatus('evening')" />
             </label>
-          </div>
+            </div>
         </div>
 
+        <!-- Collapsible Custom Time Editor -->
+        <div id="timeSettingsPanel" class="time-settings-panel" style="display: none;">
+            <form onsubmit="handleSaveCustomTimes(event)" class="time-settings-form">
+            <div class="time-inputs-container">
+                <div class="time-input-group">
+                <label for="morningTimeInput">Morning Alert</label>
+                <input type="time" id="morningTimeInput" value="09:30" required />
+                </div>
+                <div class="time-input-group">
+                <label for="eveningTimeInput">Evening Alert</label>
+                <input type="time" id="eveningTimeInput" value="21:30" required />
+                </div>
+            </div>
+            <button type="submit" class="btn btn-sm btn-full-mobile" style="margin-top: 8px;">Save Alert Times</button>
+            </form>
+        </div>
+        </div>
         <!-- Collapsible Custom Time Editor -->
         <div id="timeSettingsPanel" class="time-settings-panel" style="display: none;">
           <form onsubmit="handleSaveCustomTimes(event)" class="time-settings-form">
