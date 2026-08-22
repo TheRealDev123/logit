@@ -1,6 +1,5 @@
 /**
- * Log it - Main Application Controller
- * Optimized for Mobile & Pixel 8a Touch Interaction
+ * Log it - Main Controller (Accurate Goal Math & Red Bar Calculation)
  */
 let userWeights = [];
 let currentUnit = localStorage.getItem("logit_unit") || "kg";
@@ -162,7 +161,7 @@ function renderDashboard() {
     });
   }
 
-  // 2. Goal Progress & Dynamic Red Bar Logic
+  // 2. Goal & Red Progress Bar Logic (Directionally Accurate)
   const bar = document.getElementById("goalProgressBar");
   const pctLabel = document.getElementById("progressPctLabel");
   const statusBadge = document.getElementById("goalStatusBadge");
@@ -178,40 +177,87 @@ function renderDashboard() {
     if (goalWeight) {
       const diff = current - goalWeight;
       const isOver = diff > 0;
-
-      let pctCloser = 0;
-      if (start !== goalWeight) {
-        const totalDistance = Math.abs(start - goalWeight);
-        const distanceCovered = Math.abs(start - current);
-        pctCloser = Math.max(0, Math.min(100, Math.round((distanceCovered / totalDistance) * 100)));
-      } else {
-        pctCloser = 100;
-      }
-
-      bar.style.width = `${pctCloser}%`;
       document.getElementById("progressStartLabel").textContent = `Start: ${start}`;
       document.getElementById("progressGoalLabel").textContent = `Goal: ${goalWeight}`;
 
-      if (isOver) {
-        // Red Bar when Over Goal
-        bar.className = "progress-bar-fill over-goal";
-        pctLabel.textContent = `${pctCloser}% closer to goal`;
-        pctLabel.style.color = "var(--danger)";
-        statusBadge.className = "status-pill status-over";
-        statusBadge.textContent = `⚠️ +${Math.abs(diff).toFixed(1)} ${currentUnit} Over`;
-        summaryText.textContent = `Target: ${goalWeight} ${currentUnit} — Currently ${Math.abs(diff).toFixed(1)} ${currentUnit} above goal.`;
-        document.getElementById("statToGoal").textContent = `+${Math.abs(diff).toFixed(1)}`;
-        document.getElementById("statToGoal").style.color = "var(--danger)";
+      if (start > goalWeight) {
+        // CASE A: Weight Loss Goal (e.g. Start 200 -> Goal 150)
+        const totalToLose = start - goalWeight;
+        const lostSoFar = start - current;
+
+        if (current <= goalWeight) {
+          // Goal Achieved (Green)
+          bar.className = "progress-bar-fill goal-achieved";
+          bar.style.width = "100%";
+          pctLabel.textContent = "100% — Goal Achieved! 🎉";
+          pctLabel.style.color = "var(--success)";
+          statusBadge.className = "status-pill status-achieved";
+          statusBadge.textContent = "🎉 Goal Met";
+          summaryText.textContent = `Goal reached! Target was ${goalWeight} ${currentUnit}.`;
+          document.getElementById("statToGoal").textContent = `0.0`;
+          document.getElementById("statToGoal").style.color = "var(--success)";
+        } else if (current >= start) {
+          // Gained weight instead of losing (Red)
+          bar.className = "progress-bar-fill over-goal";
+          bar.style.width = "100%";
+          pctLabel.textContent = `0% closer (+${(current - start).toFixed(1)} ${currentUnit} above start)`;
+          pctLabel.style.color = "var(--danger)";
+          statusBadge.className = "status-pill status-over";
+          statusBadge.textContent = `⚠️ +${diff.toFixed(1)} ${currentUnit} Over Goal`;
+          summaryText.textContent = `Target: ${goalWeight} ${currentUnit} — Currently ${diff.toFixed(1)} ${currentUnit} above target.`;
+          document.getElementById("statToGoal").textContent = `+${diff.toFixed(1)}`;
+          document.getElementById("statToGoal").style.color = "var(--danger)";
+        } else {
+          // Losing weight towards goal (Red bar indicates still over goal)
+          const pct = Math.min(99, Math.max(1, Math.round((lostSoFar / totalToLose) * 100)));
+          bar.className = "progress-bar-fill over-goal";
+          bar.style.width = `${pct}%`;
+          pctLabel.textContent = `${pct}% closer to goal (${diff.toFixed(1)} ${currentUnit} remaining)`;
+          pctLabel.style.color = "var(--danger)";
+          statusBadge.className = "status-pill status-over";
+          statusBadge.textContent = `⚠️ +${diff.toFixed(1)} ${currentUnit} Over Goal`;
+          summaryText.textContent = `Target: ${goalWeight} ${currentUnit} — ${diff.toFixed(1)} ${currentUnit} remaining to reach goal.`;
+          document.getElementById("statToGoal").textContent = `+${diff.toFixed(1)}`;
+          document.getElementById("statToGoal").style.color = "var(--danger)";
+        }
       } else {
-        // Green Bar when Reached
-        bar.className = "progress-bar-fill goal-achieved";
-        pctLabel.textContent = `100% — Goal Met! 🎉`;
-        pctLabel.style.color = "var(--success)";
-        statusBadge.className = "status-pill status-achieved";
-        statusBadge.textContent = `🎉 Goal Met`;
-        summaryText.textContent = `Goal reached! Target was ${goalWeight} ${currentUnit}.`;
-        document.getElementById("statToGoal").textContent = `0.0`;
-        document.getElementById("statToGoal").style.color = "var(--success)";
+        // CASE B: Weight Gain / General Goal (e.g. Start 12 -> Goal 45)
+        if (current === goalWeight) {
+          bar.className = "progress-bar-fill goal-achieved";
+          bar.style.width = "100%";
+          pctLabel.textContent = "100% — Goal Achieved! 🎉";
+          pctLabel.style.color = "var(--success)";
+          statusBadge.className = "status-pill status-achieved";
+          statusBadge.textContent = "🎉 Goal Met";
+          summaryText.textContent = `Goal reached! Target was ${goalWeight} ${currentUnit}.`;
+          document.getElementById("statToGoal").textContent = `0.0`;
+          document.getElementById("statToGoal").style.color = "var(--success)";
+        } else if (current > goalWeight) {
+          // Overshot goal (Red Bar)
+          bar.className = "progress-bar-fill over-goal";
+          bar.style.width = "100%";
+          pctLabel.textContent = `+${diff.toFixed(1)} ${currentUnit} over target goal`;
+          pctLabel.style.color = "var(--danger)";
+          statusBadge.className = "status-pill status-over";
+          statusBadge.textContent = `⚠️ +${diff.toFixed(1)} ${currentUnit} Over Goal`;
+          summaryText.textContent = `Target: ${goalWeight} ${currentUnit} — Currently ${diff.toFixed(1)} ${currentUnit} above goal.`;
+          document.getElementById("statToGoal").textContent = `+${diff.toFixed(1)}`;
+          document.getElementById("statToGoal").style.color = "var(--danger)";
+        } else {
+          // Gaining weight towards goal
+          const totalToGain = goalWeight - start;
+          const gainedSoFar = current - start;
+          const pct = totalToGain > 0 ? Math.min(99, Math.max(0, Math.round((gainedSoFar / totalToGain) * 100))) : 0;
+          bar.className = "progress-bar-fill";
+          bar.style.width = `${pct}%`;
+          pctLabel.textContent = `${pct}% closer to goal (${Math.abs(diff).toFixed(1)} ${currentUnit} remaining)`;
+          pctLabel.style.color = "var(--primary)";
+          statusBadge.className = "status-pill status-neutral";
+          statusBadge.textContent = "In Progress";
+          summaryText.textContent = `Target: ${goalWeight} ${currentUnit} — ${Math.abs(diff).toFixed(1)} ${currentUnit} to go.`;
+          document.getElementById("statToGoal").textContent = `${diff.toFixed(1)}`;
+          document.getElementById("statToGoal").style.color = "var(--primary)";
+        }
       }
     } else {
       bar.className = "progress-bar-fill";
@@ -231,7 +277,6 @@ function renderDashboard() {
     bar.style.width = "0%";
   }
 
-  // 3. Render Chart
   renderChart();
 }
 
@@ -266,7 +311,6 @@ function renderChart() {
 
   if (chartInstance) chartInstance.destroy();
 
-  // Mobile-responsive Chart.js options
   chartInstance = new Chart(ctx, {
     type: "line",
     data: { labels, datasets },
@@ -293,7 +337,6 @@ function renderChart() {
   });
 }
 
-// Global Initialization
 document.addEventListener("DOMContentLoaded", () => {
   updateNav();
   updateTimeLabels();
