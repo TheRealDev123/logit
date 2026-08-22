@@ -1,353 +1,305 @@
-/**
- * Log it - Main Controller (Accurate Goal Math & Red Bar Calculation)
- */
-let userWeights = [];
-let currentUnit = localStorage.getItem("logit_unit") || "kg";
-let goalWeight = null;
-let chartInstance = null;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0284c7" />
+  <title>Log it — Health & Habit Tracker</title>
+  
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
 
-function showView(viewName) {
-  document.querySelectorAll(".view-section").forEach(sec => sec.classList.remove("active"));
-  const target = document.getElementById(viewName + "View");
-  if (target) target.classList.add("active");
-  window.scrollTo({ top: 0, behavior: "smooth" });
-}
+  <!-- Top Navigation Bar -->
+  <nav>
+    <div class="brand" onclick="showView('home')">
+      <span class="brand-icon">📝</span> Log it
+    </div>
+    
+    <div class="nav-links">
+      <!-- Blue Test Alert Button Always Visible at Top -->
+      <button class="btn btn-sm" onclick="testNotificationNow()" style="background-color: #0284c7; color: #ffffff; font-weight: 700; border: none; padding: 7px 14px; box-shadow: 0 2px 5px rgba(2,132,199,0.35);">
+        🧪 Test Alert
+      </button>
 
-function getTodayFormatted() {
-  return new Date().toISOString().split("T")[0];
-}
+      <div id="loggedOutNav" style="display: flex; gap: 8px;">
+        <button class="btn btn-outline btn-sm" onclick="showView('login')">Sign In</button>
+        <button class="btn btn-sm" onclick="showView('signup')">Sign Up</button>
+      </div>
+      
+      <div id="loggedInNav" style="display: none; align-items: center; gap: 8px;">
+        <span id="navUserName" class="user-badge">@user</span>
+        <button class="btn btn-outline btn-sm" onclick="logout()">Log Out</button>
+      </div>
+    </div>
+  </nav>
 
-async function initDashboard() {
-  document.getElementById("weightDate").value = getTodayFormatted();
-  document.getElementById("weightUnit").value = currentUnit;
-  document.getElementById("unitLabel").textContent = currentUnit;
-  updateNotifyButton();
-  updateTimeLabels();
+  <main class="container">
 
-  if (!currentUser) return;
+    <!-- 1. HOME VIEW -->
+    <section id="homeView" class="view-section active">
+      <div class="hero">
+        <div class="hero-tag">🎯 Health & Habit Tracking</div>
+        <h1>Set Your Goals.<br />Effortlessly <span>Log it</span>.</h1>
+        <p>
+          Track your weight journey, monitor goal progress with color-coded indicators, and receive custom teeth-brushing reminders—synced to Google Sheets.
+        </p>
+        
+        <div class="hero-actions" style="display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; width: 100%;">
+          <button class="btn btn-lg" style="flex: 1; min-width: 180px; max-width: 240px;" onclick="checkAuthAndRedirect()">Get Started Now &rarr;</button>
+          <button class="btn btn-lg" style="background-color: #0284c7; color: #fff; font-weight: 700; flex: 1; min-width: 180px; max-width: 240px;" onclick="testNotificationNow()">🧪 Test Sound & Push</button>
+        </div>
 
-  try {
-    const data = await callApi({
-      action: "getUserData",
-      userId: currentUser.userId,
-      todayDate: getTodayFormatted()
-    });
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon">🎯</div>
+            <h3>Smart Goal Tracking</h3>
+            <p>Visual bar turns red if you are over target and green when you achieve it.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">⏰</div>
+            <h3>Custom Reminder Times</h3>
+            <p>Choose your morning and evening alert times with browser push notifications.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">📊</div>
+            <h3>Google Sheets Cloud</h3>
+            <p>Private and free. All logs stay safely stored inside your own Google Sheet.</p>
+          </div>
+        </div>
+      </div>
+    </section>
 
-    userWeights = data.weights || [];
-    goalWeight = data.goalWeight || null;
+    <!-- 2. LOGIN VIEW -->
+    <section id="loginView" class="view-section">
+      <div class="form-box">
+        <h2>Sign In to <span>Log it</span></h2>
+        <p class="form-subtext">Enter your username and password</p>
+        
+        <form id="loginForm" onsubmit="handleLogin(event)">
+          <div class="form-group">
+            <label for="loginUsername">Username</label>
+            <input type="text" id="loginUsername" placeholder="e.g. alex24" autocomplete="username" autocapitalize="none" required />
+          </div>
+          <div class="form-group">
+            <label for="loginPassword">Password</label>
+            <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password" required />
+          </div>
+          <button type="submit" id="loginBtn" class="btn btn-full">Sign In</button>
+          
+          <p class="form-footer">
+            Don't have an account? <a href="#" onclick="showView('signup')">Sign Up</a>
+          </p>
+        </form>
+      </div>
+    </section>
 
-    if (goalWeight) {
-      document.getElementById("goalInput").value = goalWeight;
-    }
+    <!-- 3. SIGN UP VIEW -->
+    <section id="signupView" class="view-section">
+      <div class="form-box">
+        <h2>Create an Account</h2>
+        <p class="form-subtext">Choose a unique username to get started</p>
+        
+        <form id="signupForm" onsubmit="handleSignup(event)">
+          <div class="form-group">
+            <label for="signupName">Full Name</label>
+            <input type="text" id="signupName" placeholder="Alex Morgan" required />
+          </div>
+          <div class="form-group">
+            <label for="signupUsername">Choose a Username</label>
+            <input type="text" id="signupUsername" placeholder="e.g. alex24" pattern="[a-zA-Z0-9_]{3,20}" title="3-20 letters, numbers, or underscores" autocomplete="username" autocapitalize="none" required />
+          </div>
+          <div class="form-group">
+            <label for="signupPassword">Password</label>
+            <input type="password" id="signupPassword" minlength="6" placeholder="At least 6 characters" autocomplete="new-password" required />
+          </div>
+          <button type="submit" id="signupBtn" class="btn btn-full">Create Account</button>
+          
+          <p class="form-footer">
+            Already have an account? <a href="#" onclick="showView('login')">Sign In</a>
+          </p>
+        </form>
+      </div>
+    </section>
 
-    document.getElementById("brushMorning").checked = data.todayHabit.morning;
-    document.getElementById("brushEvening").checked = data.todayHabit.evening;
-    renderDashboard();
-  } catch (err) {
-    console.error(err);
-  }
-}
+    <!-- 4. DASHBOARD VIEW -->
+    <section id="dashView" class="view-section">
+      
+      <!-- Top Status Header -->
+      <div class="dash-header">
+        <div class="sync-status">
+          <span class="sync-dot" id="syncDot"></span>
+          <span id="syncText">Connected to Google Sheets</span>
+        </div>
+        <button id="notifyBtn" class="btn btn-outline btn-sm" onclick="requestNotificationPermission()">
+          🔔 Enable Push Reminders
+        </button>
+      </div>
 
-async function handleSetGoal(e) {
-  e.preventDefault();
-  const val = parseFloat(document.getElementById("goalInput").value);
-  if (isNaN(val) || val <= 0) return alert("Please enter a valid target goal.");
+      <!-- Toothbrush Reminder Card -->
+      <div class="card brush-banner">
+        <div class="brush-content">
+          <div>
+            <div class="brush-title-row">
+              <h2 class="card-title" style="margin-bottom: 0;">🦷 Toothbrush Schedule</h2>
+              <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <button class="btn btn-sm btn-outline" onclick="toggleTimeSettings()" style="padding: 4px 10px; font-size: 0.78rem;">
+                  ✏️ Edit Times
+                </button>
+                <!-- Bright Blue Test Alert Button -->
+                <button class="btn btn-sm" onclick="testNotificationNow()" style="padding: 4px 10px; font-size: 0.78rem; background-color: #0284c7; color: #ffffff; font-weight: 700; border: none; box-shadow: 0 2px 4px rgba(2,132,199,0.3);">
+                  🧪 Test Alert
+                </button>
+              </div>
+            </div>
+            <p class="card-desc" style="margin-top: 6px;">
+              Alerts at <strong id="morningTimeLabel">9:30 AM</strong> & <strong id="eveningTimeLabel">9:30 PM</strong>.
+            </p>
+            <div id="countdownDisplay" class="countdown-badge">Calculating next reminder...</div>
+          </div>
+          
+          <div class="habit-checklist">
+            <label class="habit-item">
+              <span id="chkMorningLabel">☀️ Morning (9:30 AM)</span>
+              <input type="checkbox" id="brushMorning" onchange="toggleBrushStatus('morning')" />
+            </label>
+            <label class="habit-item">
+              <span id="chkEveningLabel">🌙 Evening (9:30 PM)</span>
+              <input type="checkbox" id="brushEvening" onchange="toggleBrushStatus('evening')" />
+            </label>
+          </div>
+        </div>
 
-  const btn = document.getElementById("saveGoalBtn");
-  btn.disabled = true;
-  btn.textContent = "Saving...";
+        <!-- Custom Time Editor -->
+        <div id="timeSettingsPanel" class="time-settings-panel" style="display: none;">
+          <form onsubmit="handleSaveCustomTimes(event)" class="time-settings-form">
+            <div class="time-inputs-container">
+              <div class="time-input-group">
+                <label for="morningTimeInput">Morning Alert</label>
+                <input type="time" id="morningTimeInput" value="09:30" required />
+              </div>
+              <div class="time-input-group">
+                <label for="eveningTimeInput">Evening Alert</label>
+                <input type="time" id="eveningTimeInput" value="21:30" required />
+              </div>
+            </div>
+            <button type="submit" class="btn btn-sm btn-full-mobile" style="margin-top: 8px;">Save Alert Times</button>
+          </form>
+        </div>
+      </div>
 
-  try {
-    await callApi({
-      action: "setGoal",
-      userId: currentUser.userId,
-      goalWeight: val
-    });
+      <!-- Goal Progress Card (Red Bar when Over Weight) -->
+      <div class="card goal-card">
+        <div class="goal-header">
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+              <h2 class="card-title" style="margin-bottom: 0;">🎯 Weight Goal Status</h2>
+              <span id="goalStatusBadge" class="status-pill status-neutral">No Goal Set</span>
+            </div>
+            <p class="card-desc" id="goalSummaryText" style="margin-top: 4px;">
+              Set a target goal to track your trajectory.
+            </p>
+          </div>
+          <form id="goalForm" onsubmit="handleSetGoal(event)" class="goal-input-form">
+            <input type="number" step="0.1" id="goalInput" placeholder="Target weight" required />
+            <button type="submit" id="saveGoalBtn" class="btn btn-sm">Set Goal</button>
+          </form>
+        </div>
 
-    goalWeight = val;
-    currentUser.goalWeight = val;
-    localStorage.setItem("logit_user", JSON.stringify(currentUser));
-    renderDashboard();
-  } catch (err) {
-    console.error(err);
-  } finally {
-    btn.disabled = false;
-    btn.textContent = "Set Goal";
-  }
-}
+        <!-- Dynamic Progress Bar -->
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="goalProgressBar" style="width: 0%;"></div>
+        </div>
+        
+        <div class="progress-labels">
+          <span id="progressStartLabel">Start: --</span>
+          <span id="progressPctLabel" style="font-weight: 700;">0% completed</span>
+          <span id="progressGoalLabel">Goal: --</span>
+        </div>
+      </div>
 
-async function handleSaveWeight(e) {
-  e.preventDefault();
-  const date = document.getElementById("weightDate").value;
-  const weight = parseFloat(document.getElementById("weightVal").value);
-  const btn = document.getElementById("saveWeightBtn");
+      <!-- Dashboard Main Grid -->
+      <div class="dash-grid">
+        
+        <!-- Weight Log Entry Form -->
+        <div class="card">
+          <h2 class="card-title">⚖️ Log Weight</h2>
+          <form id="weightForm" onsubmit="handleSaveWeight(event)">
+            <div class="form-group">
+              <label for="weightDate">Date</label>
+              <input type="date" id="weightDate" required />
+            </div>
+            <div class="form-group">
+              <label for="weightVal">Weight (<span id="unitLabel">kg</span>)</label>
+              <input type="number" step="0.1" id="weightVal" placeholder="e.g. 74.2" required />
+            </div>
+            <div class="form-group">
+              <label for="weightUnit">Unit Preference</label>
+              <select id="weightUnit" onchange="switchUnit(this.value)">
+                <option value="kg">Kilograms (kg)</option>
+                <option value="lbs">Pounds (lbs)</option>
+              </select>
+            </div>
+            <button type="submit" id="saveWeightBtn" class="btn btn-full">Save Entry</button>
+          </form>
+        </div>
 
-  if (!date || isNaN(weight)) return;
+        <!-- Metric Cards & Visual Chart -->
+        <div class="card">
+          <h2 class="card-title">📈 Progress Overview</h2>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-label">Start</div>
+              <div class="stat-val" id="statStart">--</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Current</div>
+              <div class="stat-val" id="statCurrent">--</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label" id="statToGoalLabel">Difference</div>
+              <div class="stat-val" id="statToGoal">--</div>
+            </div>
+          </div>
+          
+          <div class="chart-container">
+            <canvas id="weightChart"></canvas>
+          </div>
+        </div>
 
-  btn.disabled = true;
-  btn.textContent = "Saving...";
+      </div>
 
-  try {
-    await callApi({
-      action: "saveWeight",
-      userId: currentUser.userId,
-      date: date,
-      weight: weight,
-      unit: currentUnit
-    });
+      <!-- Log History Table -->
+      <div class="card">
+        <h2 class="card-title">📋 Weight Logs History</h2>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Weight</th>
+                <th style="text-align: right;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="historyTableBody">
+              <tr>
+                <td colspan="3" class="table-empty">Loading records...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
 
-    const existingIdx = userWeights.findIndex(w => w.date === date);
-    if (existingIdx > -1) {
-      userWeights[existingIdx].weight = weight;
-      userWeights[existingIdx].unit = currentUnit;
-    } else {
-      userWeights.push({ id: "W_" + Date.now(), date, weight, unit: currentUnit });
-    }
+    </section>
 
-    document.getElementById("weightVal").value = "";
-    renderDashboard();
-  } catch (err) {
-    console.error(err);
-  } finally {
-    btn.disabled = false;
-    btn.textContent = "Save Entry";
-  }
-}
+  </main>
 
-async function deleteWeight(date) {
-  if (!confirm(`Delete log for ${date}?`)) return;
-
-  try {
-    await callApi({
-      action: "deleteWeight",
-      userId: currentUser.userId,
-      date: date
-    });
-
-    userWeights = userWeights.filter(w => w.date !== date);
-    renderDashboard();
-  } catch (err) {
-    console.error(err);
-  }
-}
-
-function switchUnit(newUnit) {
-  currentUnit = newUnit;
-  localStorage.setItem("logit_unit", newUnit);
-  document.getElementById("unitLabel").textContent = newUnit;
-  renderDashboard();
-}
-
-function renderDashboard() {
-  userWeights.sort((a, b) => new Date(a.date) - new Date(b.date));
-
-  // 1. History Table
-  const tbody = document.getElementById("historyTableBody");
-  tbody.innerHTML = "";
-
-  if (userWeights.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="3" class="table-empty">No weight entries logged yet.</td></tr>`;
-  } else {
-    [...userWeights].reverse().forEach(log => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${log.date}</td>
-        <td><strong>${log.weight} ${log.unit || currentUnit}</strong></td>
-        <td style="text-align: right;">
-          <button class="btn-danger" onclick="deleteWeight('${log.date}')">Delete</button>
-        </td>
-      `;
-      tbody.appendChild(tr);
-    });
-  }
-
-  // 2. Goal & Red Progress Bar Logic (Directionally Accurate)
-  const bar = document.getElementById("goalProgressBar");
-  const pctLabel = document.getElementById("progressPctLabel");
-  const statusBadge = document.getElementById("goalStatusBadge");
-  const summaryText = document.getElementById("goalSummaryText");
-
-  if (userWeights.length > 0) {
-    const start = userWeights[0].weight;
-    const current = userWeights[userWeights.length - 1].weight;
-
-    document.getElementById("statStart").textContent = `${start}`;
-    document.getElementById("statCurrent").textContent = `${current}`;
-
-    if (goalWeight) {
-      const diff = current - goalWeight;
-      const isOver = diff > 0;
-      document.getElementById("progressStartLabel").textContent = `Start: ${start}`;
-      document.getElementById("progressGoalLabel").textContent = `Goal: ${goalWeight}`;
-
-      if (start > goalWeight) {
-        // CASE A: Weight Loss Goal (e.g. Start 200 -> Goal 150)
-        const totalToLose = start - goalWeight;
-        const lostSoFar = start - current;
-
-        if (current <= goalWeight) {
-          // Goal Achieved (Green)
-          bar.className = "progress-bar-fill goal-achieved";
-          bar.style.width = "100%";
-          pctLabel.textContent = "100% — Goal Achieved! 🎉";
-          pctLabel.style.color = "var(--success)";
-          statusBadge.className = "status-pill status-achieved";
-          statusBadge.textContent = "🎉 Goal Met";
-          summaryText.textContent = `Goal reached! Target was ${goalWeight} ${currentUnit}.`;
-          document.getElementById("statToGoal").textContent = `0.0`;
-          document.getElementById("statToGoal").style.color = "var(--success)";
-        } else if (current >= start) {
-          // Gained weight instead of losing (Red)
-          bar.className = "progress-bar-fill over-goal";
-          bar.style.width = "100%";
-          pctLabel.textContent = `0% closer (+${(current - start).toFixed(1)} ${currentUnit} above start)`;
-          pctLabel.style.color = "var(--danger)";
-          statusBadge.className = "status-pill status-over";
-          statusBadge.textContent = `⚠️ +${diff.toFixed(1)} ${currentUnit} Over Goal`;
-          summaryText.textContent = `Target: ${goalWeight} ${currentUnit} — Currently ${diff.toFixed(1)} ${currentUnit} above target.`;
-          document.getElementById("statToGoal").textContent = `+${diff.toFixed(1)}`;
-          document.getElementById("statToGoal").style.color = "var(--danger)";
-        } else {
-          // Losing weight towards goal (Red bar indicates still over goal)
-          const pct = Math.min(99, Math.max(1, Math.round((lostSoFar / totalToLose) * 100)));
-          bar.className = "progress-bar-fill over-goal";
-          bar.style.width = `${pct}%`;
-          pctLabel.textContent = `${pct}% closer to goal (${diff.toFixed(1)} ${currentUnit} remaining)`;
-          pctLabel.style.color = "var(--danger)";
-          statusBadge.className = "status-pill status-over";
-          statusBadge.textContent = `⚠️ +${diff.toFixed(1)} ${currentUnit} Over Goal`;
-          summaryText.textContent = `Target: ${goalWeight} ${currentUnit} — ${diff.toFixed(1)} ${currentUnit} remaining to reach goal.`;
-          document.getElementById("statToGoal").textContent = `+${diff.toFixed(1)}`;
-          document.getElementById("statToGoal").style.color = "var(--danger)";
-        }
-      } else {
-        // CASE B: Weight Gain / General Goal (e.g. Start 12 -> Goal 45)
-        if (current === goalWeight) {
-          bar.className = "progress-bar-fill goal-achieved";
-          bar.style.width = "100%";
-          pctLabel.textContent = "100% — Goal Achieved! 🎉";
-          pctLabel.style.color = "var(--success)";
-          statusBadge.className = "status-pill status-achieved";
-          statusBadge.textContent = "🎉 Goal Met";
-          summaryText.textContent = `Goal reached! Target was ${goalWeight} ${currentUnit}.`;
-          document.getElementById("statToGoal").textContent = `0.0`;
-          document.getElementById("statToGoal").style.color = "var(--success)";
-        } else if (current > goalWeight) {
-          // Overshot goal (Red Bar)
-          bar.className = "progress-bar-fill over-goal";
-          bar.style.width = "100%";
-          pctLabel.textContent = `+${diff.toFixed(1)} ${currentUnit} over target goal`;
-          pctLabel.style.color = "var(--danger)";
-          statusBadge.className = "status-pill status-over";
-          statusBadge.textContent = `⚠️ +${diff.toFixed(1)} ${currentUnit} Over Goal`;
-          summaryText.textContent = `Target: ${goalWeight} ${currentUnit} — Currently ${diff.toFixed(1)} ${currentUnit} above goal.`;
-          document.getElementById("statToGoal").textContent = `+${diff.toFixed(1)}`;
-          document.getElementById("statToGoal").style.color = "var(--danger)";
-        } else {
-          // Gaining weight towards goal
-          const totalToGain = goalWeight - start;
-          const gainedSoFar = current - start;
-          const pct = totalToGain > 0 ? Math.min(99, Math.max(0, Math.round((gainedSoFar / totalToGain) * 100))) : 0;
-          bar.className = "progress-bar-fill";
-          bar.style.width = `${pct}%`;
-          pctLabel.textContent = `${pct}% closer to goal (${Math.abs(diff).toFixed(1)} ${currentUnit} remaining)`;
-          pctLabel.style.color = "var(--primary)";
-          statusBadge.className = "status-pill status-neutral";
-          statusBadge.textContent = "In Progress";
-          summaryText.textContent = `Target: ${goalWeight} ${currentUnit} — ${Math.abs(diff).toFixed(1)} ${currentUnit} to go.`;
-          document.getElementById("statToGoal").textContent = `${diff.toFixed(1)}`;
-          document.getElementById("statToGoal").style.color = "var(--primary)";
-        }
-      }
-    } else {
-      bar.className = "progress-bar-fill";
-      bar.style.width = "0%";
-      pctLabel.textContent = "No goal set";
-      pctLabel.style.color = "var(--text-muted)";
-      statusBadge.className = "status-pill status-neutral";
-      statusBadge.textContent = "No Goal Set";
-      summaryText.textContent = "Set a target goal to track your progress.";
-      document.getElementById("statToGoal").textContent = "--";
-      document.getElementById("statToGoal").style.color = "var(--primary)";
-    }
-  } else {
-    document.getElementById("statStart").textContent = "--";
-    document.getElementById("statCurrent").textContent = "--";
-    document.getElementById("statToGoal").textContent = "--";
-    bar.style.width = "0%";
-  }
-
-  renderChart();
-}
-
-function renderChart() {
-  const ctx = document.getElementById("weightChart").getContext("2d");
-  const labels = userWeights.map(w => w.date);
-  const data = userWeights.map(w => w.weight);
-
-  const datasets = [{
-    label: `Weight (${currentUnit})`,
-    data: data,
-    borderColor: "#0284c7",
-    backgroundColor: "rgba(2, 132, 199, 0.08)",
-    fill: true,
-    tension: 0.35,
-    borderWidth: 2,
-    pointRadius: 3,
-    pointBackgroundColor: "#0284c7"
-  }];
-
-  if (goalWeight && labels.length > 0) {
-    datasets.push({
-      label: `Goal`,
-      data: new Array(labels.length).fill(goalWeight),
-      borderColor: "#16a34a",
-      borderDash: [5, 5],
-      borderWidth: 1.5,
-      pointRadius: 0,
-      fill: false
-    });
-  }
-
-  if (chartInstance) chartInstance.destroy();
-
-  chartInstance = new Chart(ctx, {
-    type: "line",
-    data: { labels, datasets },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          display: !!goalWeight,
-          labels: { boxWidth: 10, font: { size: 11 }, color: "#64748b" }
-        }
-      },
-      scales: {
-        x: {
-          grid: { display: false },
-          ticks: { font: { size: 10 }, color: "#94a3b8", maxRotation: 0, autoSkip: true, maxTicksLimit: 5 }
-        },
-        y: {
-          grid: { color: "#f1f5f9" },
-          ticks: { font: { size: 10 }, color: "#94a3b8" }
-        }
-      }
-    }
-  });
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  updateNav();
-  updateTimeLabels();
-
-  if (currentUser) {
-    showView("dash");
-    initDashboard();
-  } else {
-    showView("home");
-  }
-
-  setInterval(checkScheduledTimeAndCountdown, 1000);
-  checkScheduledTimeAndCountdown();
-});
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/reminders.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/pwa.js"></script>
+</body>
+</html>
