@@ -1,8 +1,9 @@
 {
   "name": "Log it — Health & Habit Tracker",
   "short_name": "Log it",
-  "description": "Track your weight, set goals, and schedule toothbrush habits with Google Sheets syncing.",
-  "start_url": "./index.html",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#f8fafc",
