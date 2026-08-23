@@ -4,10 +4,10 @@
  * 
  * Features:
  * - Customizable morning & evening alert times (defaults: 09:30 & 21:30)
- * - Android Service Worker push notifications + vibration for Google Pixel 8a
- * - Web Audio API synthesized alert chime
+ * - Android Service Worker push notifications + vibration using your custom logo
+ * - Web Audio API melodic alert chime
  * - Missed-alarm catch-up logic (fires even if the phone screen was asleep)
- * - Dynamic 12-hour countdown display
+ * - Live dynamic countdown timer
  * - One-tap test alert button handler
  * - Google Sheets habit synchronization
  */
@@ -16,7 +16,7 @@
 let morningTime = localStorage.getItem("logit_morning_time") || "09:30";
 let eveningTime = localStorage.getItem("logit_evening_time") || "21:30";
 
-// Helper: Convert 24-hour time "09:30" or "21:30" to "9:30 AM" / "9:30 PM"
+// Helper: Convert 24-hour time "09:30" / "21:30" to "9:30 AM" / "9:30 PM"
 function format12Hour(timeStr) {
   if (!timeStr) return "";
   const [hStr, mStr] = timeStr.split(":");
@@ -26,7 +26,7 @@ function format12Hour(timeStr) {
   return `${h}:${mStr} ${ampm}`;
 }
 
-// 2. Update all UI labels, checkboxes, and input pickers across the app
+// 2. Update UI labels, checkboxes, and input pickers across the app
 function updateTimeLabels() {
   const mornFormatted = format12Hour(morningTime);
   const eveFormatted = format12Hour(eveningTime);
@@ -83,7 +83,7 @@ async function requestNotificationPermission() {
 
   if (perm === "granted") {
     sendPushAlert(
-      "Reminders Active! 🪥", 
+      "Reminders Active! 🦷", 
       `Alerts set for ${format12Hour(morningTime)} and ${format12Hour(eveningTime)}.`
     );
   } else {
@@ -148,19 +148,19 @@ function playBrushChime() {
   }
 }
 
-// 7. Send push notifications (Uses Service Worker for Android/Pixel 8a)
+// 7. Send push notifications (Uses your custom logo for icon & badge)
 async function sendPushAlert(title, bodyText) {
   playBrushChime();
 
-  // Try Service Worker notification first (Required for Android Chrome background alerts)
+  // Try Service Worker notification first (Required for Android/Pixel 8a background alerts)
   if ("serviceWorker" in navigator) {
     try {
       const reg = await navigator.serviceWorker.ready;
       if (reg && reg.showNotification) {
         await reg.showNotification(title, {
           body: bodyText,
-          icon: "https://img.icons8.com/color/96/toothbrush.png",
-          badge: "https://img.icons8.com/color/96/toothbrush.png",
+          icon: "icons/icon-192x192.png",
+          badge: "icons/icon-192x192.png",
           vibrate: [200, 100, 200, 100, 200],
           tag: "brush-reminder",
           renotify: true,
@@ -177,7 +177,7 @@ async function sendPushAlert(title, bodyText) {
   if ("Notification" in window && Notification.permission === "granted") {
     new Notification(title, {
       body: bodyText,
-      icon: "https://img.icons8.com/color/96/toothbrush.png",
+      icon: "icons/icon-192x192.png",
       vibrate: [200, 100, 200]
     });
   } else {
@@ -185,7 +185,7 @@ async function sendPushAlert(title, bodyText) {
   }
 }
 
-// 8. One-Tap Test Alert Handler (Asks for permission if not yet granted)
+// 8. One-Tap Test Alert Handler (Asks for permission automatically if not yet granted)
 async function testNotificationNow() {
   if ("Notification" in window && Notification.permission !== "granted") {
     const perm = await Notification.requestPermission();
@@ -198,8 +198,8 @@ async function testNotificationNow() {
   }
 
   sendPushAlert(
-    "Test Alert Working! 🪥✨", 
-    `Your sound, vibration, and push notifications are configured correctly!`
+    "Test Alert Working! 🦷✨", 
+    `Your sound, vibration, and push notifications are working properly!`
   );
 }
 
@@ -224,7 +224,7 @@ function checkScheduledTimeAndCountdown() {
   if (currentTotalMins >= morningTotalMins && currentTotalMins < morningTotalMins + 120) {
     if (lastMorningAlert !== todayStr) {
       localStorage.setItem("logit_last_morning_alert", todayStr);
-      sendPushAlert("Time to Brush! 🪥 (Morning)", `It's time for your ${format12Hour(morningTime)} morning brush.`);
+      sendPushAlert("Time to Brush! 🦷 (Morning)", `It's time for your ${format12Hour(morningTime)} morning brush.`);
     }
   }
 
@@ -233,7 +233,7 @@ function checkScheduledTimeAndCountdown() {
   if (currentTotalMins >= eveningTotalMins && currentTotalMins < eveningTotalMins + 120) {
     if (lastEveningAlert !== todayStr) {
       localStorage.setItem("logit_last_evening_alert", todayStr);
-      sendPushAlert("Time to Brush! 🪥 (Evening)", `It's time for your ${format12Hour(eveningTime)} evening brush.`);
+      sendPushAlert("Time to Brush! 🦷 (Evening)", `It's time for your ${format12Hour(eveningTime)} evening brush.`);
     }
   }
 
