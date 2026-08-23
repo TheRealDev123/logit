@@ -19,7 +19,6 @@
     </div>
     
     <div class="nav-links">
-      <!-- Blue Test Alert Button Always Visible at Top -->
       <button class="btn btn-sm" onclick="testNotificationNow()" style="background-color: #0284c7; color: #ffffff; font-weight: 700; border: none; padding: 7px 14px; box-shadow: 0 2px 5px rgba(2,132,199,0.35);">
         🧪 Test Alert
       </button>
@@ -76,15 +75,19 @@
     <section id="loginView" class="view-section">
       <div class="form-box">
         <h2>Sign In to <span>Log it</span></h2>
-        <p class="form-subtext">Enter your username and password</p>
+        <p class="form-subtext">Enter your username or email</p>
         
         <form id="loginForm" onsubmit="handleLogin(event)">
           <div class="form-group">
-            <label for="loginUsername">Username</label>
-            <input type="text" id="loginUsername" placeholder="e.g. alex24" autocomplete="username" autocapitalize="none" required />
+            <label for="loginUsername">Username or Email</label>
+            <input type="text" id="loginUsername" placeholder="e.g. alex24 or you@email.com" autocomplete="username" autocapitalize="none" required />
           </div>
           <div class="form-group">
-            <label for="loginPassword">Password</label>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <label for="loginPassword" style="margin-bottom: 0;">Password</label>
+              <!-- Link to Forgot Password Step 1 -->
+              <a href="#" onclick="showView('forgot')" style="font-size: 0.8rem; color: var(--primary); text-decoration: none; font-weight: 600;">Forgot Password?</a>
+            </div>
             <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password" required />
           </div>
           <button type="submit" id="loginBtn" class="btn btn-full">Sign In</button>
@@ -96,11 +99,63 @@
       </div>
     </section>
 
-    <!-- 3. SIGN UP VIEW -->
+    <!-- 3. FORGOT PASSWORD STEP 1 (REQUEST 6-DIGIT CODE) -->
+    <section id="forgotView" class="view-section">
+      <div class="form-box">
+        <h2>Forgot Password?</h2>
+        <p class="form-subtext">Enter your username or email and we will send a 6-digit code to your inbox.</p>
+        
+        <form id="forgotForm" onsubmit="handleForgotPassword(event)">
+          <div class="form-group">
+            <label for="forgotIdentifier">Username or Email Address</label>
+            <input type="text" id="forgotIdentifier" placeholder="e.g. alex24 or you@email.com" autocapitalize="none" required />
+          </div>
+          <button type="submit" id="forgotBtn" class="btn btn-full">Send 6-Digit Code</button>
+          
+          <p class="form-footer">
+            Remembered your password? <a href="#" onclick="showView('login')">Sign In</a>
+          </p>
+        </form>
+      </div>
+    </section>
+
+    <!-- 4. RESET PASSWORD STEP 2 (ENTER CODE & SET NEW PASSWORD) -->
+    <section id="resetView" class="view-section">
+      <div class="form-box">
+        <h2>Set New Password</h2>
+        <p class="form-subtext" id="resetSubtext">Enter the 6-digit code from your email and choose your new password.</p>
+        
+        <form id="resetForm" onsubmit="handleResetPasswordWithCode(event)">
+          <div class="form-group">
+            <label for="resetIdentifier">Username or Email</label>
+            <input type="text" id="resetIdentifier" placeholder="e.g. alex24" autocapitalize="none" required />
+          </div>
+          <div class="form-group">
+            <label for="resetCode">6-Digit Verification Code</label>
+            <input type="text" id="resetCode" placeholder="e.g. 583921" maxlength="6" pattern="[0-9]{6}" title="6 digit numeric code" required style="letter-spacing: 4px; font-weight: 700; font-size: 1.1rem; text-align: center;" />
+          </div>
+          <div class="form-group">
+            <label for="resetNewPassword">New Password</label>
+            <input type="password" id="resetNewPassword" minlength="6" placeholder="At least 6 characters" required />
+          </div>
+          <div class="form-group">
+            <label for="resetConfirmPassword">Confirm New Password</label>
+            <input type="password" id="resetConfirmPassword" minlength="6" placeholder="Re-type new password" required />
+          </div>
+          <button type="submit" id="resetBtn" class="btn btn-full">Update Password</button>
+          
+          <p class="form-footer">
+            Didn't receive a code? <a href="#" onclick="showView('forgot')">Resend Code</a> | <a href="#" onclick="showView('login')">Cancel</a>
+          </p>
+        </form>
+      </div>
+    </section>
+
+    <!-- 5. SIGN UP VIEW -->
     <section id="signupView" class="view-section">
       <div class="form-box">
         <h2>Create an Account</h2>
-        <p class="form-subtext">Choose a unique username to get started</p>
+        <p class="form-subtext">Enter your details to get started</p>
         
         <form id="signupForm" onsubmit="handleSignup(event)">
           <div class="form-group">
@@ -110,6 +165,10 @@
           <div class="form-group">
             <label for="signupUsername">Choose a Username</label>
             <input type="text" id="signupUsername" placeholder="e.g. alex24" pattern="[a-zA-Z0-9_]{3,20}" title="3-20 letters, numbers, or underscores" autocomplete="username" autocapitalize="none" required />
+          </div>
+          <div class="form-group">
+            <label for="signupEmail">Email Address (for password recovery)</label>
+            <input type="email" id="signupEmail" placeholder="you@email.com" autocomplete="email" required />
           </div>
           <div class="form-group">
             <label for="signupPassword">Password</label>
@@ -124,10 +183,9 @@
       </div>
     </section>
 
-    <!-- 4. DASHBOARD VIEW -->
+    <!-- 6. DASHBOARD VIEW -->
     <section id="dashView" class="view-section">
       
-      <!-- Top Status Header -->
       <div class="dash-header">
         <div class="sync-status">
           <span class="sync-dot" id="syncDot"></span>
@@ -148,7 +206,6 @@
                 <button class="btn btn-sm btn-outline" onclick="toggleTimeSettings()" style="padding: 4px 10px; font-size: 0.78rem;">
                   ✏️ Edit Times
                 </button>
-                <!-- Bright Blue Test Alert Button -->
                 <button class="btn btn-sm" onclick="testNotificationNow()" style="padding: 4px 10px; font-size: 0.78rem; background-color: #0284c7; color: #ffffff; font-weight: 700; border: none; box-shadow: 0 2px 4px rgba(2,132,199,0.3);">
                   🧪 Test Alert
                 </button>
@@ -172,7 +229,6 @@
           </div>
         </div>
 
-        <!-- Custom Time Editor -->
         <div id="timeSettingsPanel" class="time-settings-panel" style="display: none;">
           <form onsubmit="handleSaveCustomTimes(event)" class="time-settings-form">
             <div class="time-inputs-container">
@@ -190,7 +246,7 @@
         </div>
       </div>
 
-      <!-- Goal Progress Card (Red Bar when Over Weight) -->
+      <!-- Goal Progress Card -->
       <div class="card goal-card">
         <div class="goal-header">
           <div>
@@ -208,7 +264,6 @@
           </form>
         </div>
 
-        <!-- Dynamic Progress Bar -->
         <div class="progress-bar-bg">
           <div class="progress-bar-fill" id="goalProgressBar" style="width: 0%;"></div>
         </div>
