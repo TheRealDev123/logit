@@ -1,5 +1,5 @@
 /**
- * Log it - Username Authentication & User State
+ * Log it - Authentication & 2-Step Password Reset Handlers
  */
 let currentUser = JSON.parse(localStorage.getItem("logit_user") || "null");
 
@@ -18,11 +18,13 @@ function updateNav() {
   }
 }
 
+// 1. SIGNUP
 async function handleSignup(e) {
   e.preventDefault();
   const name = document.getElementById("signupName").value.trim();
   const username = document.getElementById("signupUsername").value.trim().toLowerCase();
-  const password = document.getElementById("signupPassword").value;
+  const email = document.getElementById("signupEmail").value.trim().toLowerCase();
+  const password = document.getElementById("signupPassword").value.trim();
   const btn = document.getElementById("signupBtn");
 
   btn.disabled = true;
@@ -33,6 +35,7 @@ async function handleSignup(e) {
       action: "signup",
       name: name,
       username: username,
+      email: email,
       password: password
     });
 
@@ -49,10 +52,11 @@ async function handleSignup(e) {
   }
 }
 
+// 2. LOGIN
 async function handleLogin(e) {
   e.preventDefault();
   const username = document.getElementById("loginUsername").value.trim().toLowerCase();
-  const password = document.getElementById("loginPassword").value;
+  const password = document.getElementById("loginPassword").value.trim();
   const btn = document.getElementById("loginBtn");
 
   btn.disabled = true;
@@ -75,6 +79,77 @@ async function handleLogin(e) {
   } finally {
     btn.disabled = false;
     btn.textContent = "Sign In";
+  }
+}
+
+// 3. STEP 1: REQUEST 6-DIGIT CODE
+async function handleForgotPassword(e) {
+  e.preventDefault();
+  const identifier = document.getElementById("forgotIdentifier").value.trim().toLowerCase();
+  const btn = document.getElementById("forgotBtn");
+
+  btn.disabled = true;
+  btn.textContent = "Sending Code...";
+
+  try {
+    const data = await callApi({
+      action: "forgotPassword",
+      identifier: identifier
+    });
+
+    alert(data.message || "A 6-digit code has been sent to your email!");
+    
+    // Automatically transition to Step 2 Reset Screen and pre-fill username
+    document.getElementById("resetIdentifier").value = identifier;
+    document.getElementById("resetCode").value = "";
+    document.getElementById("resetNewPassword").value = "";
+    document.getElementById("resetConfirmPassword").value = "";
+    showView("reset");
+  } catch (err) {
+    console.error(err);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Send 6-Digit Code";
+  }
+}
+
+// 4. STEP 2: VERIFY CODE & UPDATE PASSWORD
+async function handleResetPasswordWithCode(e) {
+  e.preventDefault();
+  const identifier = document.getElementById("resetIdentifier").value.trim().toLowerCase();
+  const code = document.getElementById("resetCode").value.trim();
+  const newPassword = document.getElementById("resetNewPassword").value.trim();
+  const confirmPassword = document.getElementById("resetConfirmPassword").value.trim();
+  const btn = document.getElementById("resetBtn");
+
+  if (newPassword !== confirmPassword) {
+    return alert("Passwords do not match. Please re-type your new password.");
+  }
+
+  if (newPassword.length < 6) {
+    return alert("Password must be at least 6 characters long.");
+  }
+
+  btn.disabled = true;
+  btn.textContent = "Updating Password...";
+
+  try {
+    const data = await callApi({
+      action: "resetPasswordWithCode",
+      identifier: identifier,
+      code: code,
+      newPassword: newPassword
+    });
+
+    alert("🎉 " + (data.message || "Password reset successful! Please sign in with your new password."));
+    document.getElementById("loginUsername").value = identifier;
+    document.getElementById("loginPassword").value = "";
+    showView("login");
+  } catch (err) {
+    console.error(err);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Update Password";
   }
 }
 
