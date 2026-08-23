@@ -1,24 +1,23 @@
 {
-  "name": "Log it Health Tracker",
+  "name": "Log it — Health & Habit Tracker",
   "short_name": "Log it",
-  "description": "Track your health goals, weight, habits, and reminders.",
-  "start_url": "./",
-  "scope": "./",
+  "description": "Track your weight, set goals, and schedule toothbrush habits with Google Sheets syncing.",
+  "start_url": "./index.html",
   "display": "standalone",
-  "orientation": "portrait-primary",
+  "orientation": "portrait",
   "background_color": "#f8fafc",
   "theme_color": "#0284c7",
   "icons": [
     {
-      "src": "icons/icon-192.svg",
+      "src": "icons/icon-192x192.png",
       "sizes": "192x192",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "icons/icon-512.svg",
+      "src": "icons/icon-512x512.png",
       "sizes": "512x512",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ]
