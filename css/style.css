@@ -637,3 +637,23 @@ th {
     width: 100%;
   }
 }
+
+/* Navigation Brand Logo */
+.brand {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  letter-spacing: -0.5px;
+}
+
+.brand-img {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  object-fit: contain;
+  box-shadow: 0 2px 4px rgba(2, 132, 199, 0.25);
+}
