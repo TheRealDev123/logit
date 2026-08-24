@@ -1,14 +1,18 @@
 /**
- * Log it AI — Dual Engine (Gemini 10 msgs/day + Unlimited Local AI Fallback)
+ * Log it AI — Shared Email Quota & Admin Infinite Usage Engine
  * File Path: js/ai.js
  */
 
 const DAILY_GEMINI_LIMIT = 10;
 
-// 1. Quota & Reset Management
+function getTodayDateStr() {
+  return new Date().toISOString().split("T")[0];
+}
+
 function getDailyAiCount() {
-  const todayStr = getTodayFormatted();
+  const todayStr = getTodayDateStr();
   const storedDate = localStorage.getItem("logit_ai_daily_date");
+  
   if (storedDate !== todayStr) {
     localStorage.setItem("logit_ai_daily_date", todayStr);
     localStorage.setItem("logit_ai_daily_count", "0");
@@ -17,19 +21,27 @@ function getDailyAiCount() {
   return parseInt(localStorage.getItem("logit_ai_daily_count") || "0", 10);
 }
 
-function incrementDailyAiCount() {
-  const count = getDailyAiCount() + 1;
+function setDailyAiCount(count) {
+  localStorage.setItem("logit_ai_daily_date", getTodayDateStr());
   localStorage.setItem("logit_ai_daily_count", count.toString());
   updateAiQuotaDisplay();
-  return count;
 }
 
 function updateAiQuotaDisplay() {
   const badge = document.getElementById("aiDailyQuotaBadge");
   if (!badge) return;
+
+  // 👑 ADMIN: Infinite AI Usage
+  if (currentUser && currentUser.isAdmin) {
+    badge.textContent = `👑 Gemini: ∞ Unlimited (Admin)`;
+    badge.className = "ai-quota-badge ai-quota-admin";
+    return;
+  }
+
+  // Regular Users: Shared Email Quota
   const count = getDailyAiCount();
   if (count < DAILY_GEMINI_LIMIT) {
-    badge.textContent = `⚡ Gemini: ${count}/${DAILY_GEMINI_LIMIT} today`;
+    badge.textContent = `⚡ Gemini: ${count}/${DAILY_GEMINI_LIMIT} today (Email shared)`;
     badge.className = "ai-quota-badge ai-quota-active";
   } else {
     badge.textContent = `⚡ Local AI Active (${DAILY_GEMINI_LIMIT}/${DAILY_GEMINI_LIMIT} used)`;
@@ -37,7 +49,6 @@ function updateAiQuotaDisplay() {
   }
 }
 
-// 2. Open / Close Drawer
 function toggleAiDrawer() {
   if (!currentUser) {
     alert("Please sign in or create an account to use Log it AI.");
@@ -49,8 +60,8 @@ function toggleAiDrawer() {
   modal.classList.toggle("open");
   if (modal.classList.contains("open")) {
     document.getElementById("aiChatInput").focus();
-    updateAiQuotaDisplay();
   }
+  updateAiQuotaDisplay();
 }
 
 function handleAiPromptSubmit(e) {
@@ -83,7 +94,7 @@ function appendAiMessage(sender, text) {
 }
 
 // -------------------------------------------------------------
-// HYBRID AI DISPATCHER (GEMINI -> LOCAL FALLBACK)
+// HYBRID AI DISPATCHER
 // -------------------------------------------------------------
 async function processAiMessage(prompt) {
   if (!currentUser) {
@@ -91,17 +102,18 @@ async function processAiMessage(prompt) {
     return;
   }
 
+  const isAdmin = currentUser.isAdmin === true;
   const currentDailyCount = getDailyAiCount();
 
-  // IF OVER 10 MESSAGES TODAY -> USE LOCAL BUILT-IN AI
-  if (currentDailyCount >= DAILY_GEMINI_LIMIT) {
-    appendAiMessage("bot", `⚡ *[Daily Gemini limit of 10 reached for today. Running on Built-in Assistant]*`);
+  // NON-ADMIN EXCEEDED 10 MSGS -> LOCAL AI
+  if (!isAdmin && currentDailyCount >= DAILY_GEMINI_LIMIT) {
+    appendAiMessage("bot", `⚡ *[Daily limit of 10 Gemini messages reached for this email. Switched to Built-in Assistant]*`);
     fallbackLocalExecution(prompt);
     return;
   }
 
-  // UNDER 10 MESSAGES -> USE GOOGLE GEMINI 1.5 FLASH
-  appendAiMessage("bot", "🤖 *Thinking & processing with Gemini...*");
+  // GEMINI FLASH DISPATCH
+  appendAiMessage("bot", isAdmin ? "👑 *Processing with Gemini Flash (Admin Unlimited)...*" : "🤖 *Thinking & processing with Gemini Flash...*");
   const latestWeight = userWeights.length > 0 ? userWeights[userWeights.length - 1].weight : null;
 
   try {
@@ -110,6 +122,8 @@ async function processAiMessage(prompt) {
       prompt: prompt,
       context: {
         username: currentUser.username,
+        email: currentUser.email,
+        isAdmin: isAdmin,
         currentWeight: latestWeight ? `${latestWeight} ${currentUnit}` : null,
         goalWeight: goalWeight ? `${goalWeight} ${currentUnit}` : null,
         unit: currentUnit,
@@ -119,15 +133,18 @@ async function processAiMessage(prompt) {
       }
     });
 
+    // Update shared email daily count
+    if (res && res.dailyCount !== undefined && !isAdmin) {
+      setDailyAiCount(res.dailyCount);
+    }
+
     // Remove "Thinking..." indicator
     const msgs = document.querySelectorAll(".ai-msg-bot");
     if (msgs.length > 0 && msgs[msgs.length - 1].textContent.includes("Thinking")) {
       msgs[msgs.length - 1].remove();
     }
 
-    if (res.raw) {
-      incrementDailyAiCount();
-
+    if (res && res.raw) {
       let parsed = null;
       try {
         const jsonStart = res.raw.indexOf("{");
@@ -149,8 +166,8 @@ async function processAiMessage(prompt) {
       fallbackLocalExecution(prompt);
     }
   } catch (err) {
-    // If rate limit message
-    if (err.message && err.message.includes("Rate limit")) {
+    if (err.message && err.message.includes("Daily limit")) {
+      setDailyAiCount(10);
       appendAiMessage("bot", `⏳ ${err.message}\n*Switching to Local Assistant for this message:*`);
     }
     fallbackLocalExecution(prompt);
@@ -313,7 +330,7 @@ async function fallbackLocalExecution(rawText) {
     return;
   }
 
-  appendAiMessage("bot", `🤖 Ready! You can tell me to log weights (*"Log 70 kg"*), set your goal (*"Set goal to 65 kg"*), change alert times (*"Morning alert 8 AM"*), or check your routines!`);
+  appendAiMessage("bot", `🤖 Ready! You can ask me to log weights (*"Log 70 kg"*), set your goal (*"Set goal to 65 kg"*), or change alert times (*"Morning alert 8 AM"*).`);
 }
 
 function parseTimeFromText(str) {
@@ -327,3 +344,7 @@ function parseTimeFromText(str) {
   const hStr = h < 10 ? "0" + h : "" + h;
   return `${hStr}:${m}`;
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+  updateAiQuotaDisplay();
+});
