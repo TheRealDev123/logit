@@ -1,5 +1,5 @@
 /**
- * Log it - Authentication & Logged-In AI Visibility
+ * Log it - Authentication & Admin Badge Support
  */
 let currentUser = JSON.parse(localStorage.getItem("logit_user") || "null");
 
@@ -11,13 +11,18 @@ function updateNav() {
   const aiModal = document.getElementById("aiModal");
 
   if (currentUser) {
-    // Show user info & AI options
     loggedOutNav.style.display = "none";
     loggedInNav.style.display = "flex";
-    navUserName.textContent = `@${currentUser.username}`;
+    
+    // Display Admin Badge if Admin Account
+    if (currentUser.isAdmin) {
+      navUserName.innerHTML = `👑 @${currentUser.username} <span class="admin-badge">ADMIN</span>`;
+    } else {
+      navUserName.textContent = `@${currentUser.username}`;
+    }
+
     if (floatingAiBtn) floatingAiBtn.style.display = "flex";
   } else {
-    // HIDE ALL AI BUTTONS & ICONS WHEN LOGGED OUT
     loggedOutNav.style.display = "flex";
     loggedInNav.style.display = "none";
     if (floatingAiBtn) floatingAiBtn.style.display = "none";
@@ -89,7 +94,7 @@ async function handleLogin(e) {
   }
 }
 
-// 3. STEP 1: REQUEST 6-DIGIT CODE
+// 3. FORGOT PASSWORD (REQUEST CODE)
 async function handleForgotPassword(e) {
   e.preventDefault();
   const identifier = document.getElementById("forgotIdentifier").value.trim().toLowerCase();
@@ -119,7 +124,7 @@ async function handleForgotPassword(e) {
   }
 }
 
-// 4. STEP 2: VERIFY CODE & UPDATE PASSWORD
+// 4. RESET PASSWORD WITH CODE
 async function handleResetPasswordWithCode(e) {
   e.preventDefault();
   const identifier = document.getElementById("resetIdentifier").value.trim().toLowerCase();
