@@ -5,6 +5,7 @@
   --border-focus: #0284c7;
   --primary: #0284c7;
   --primary-hover: #0369a1;
+  --accent: #6366f1;
   --text: #0f172a;
   --text-muted: #64748b;
   --success: #16a34a;
@@ -32,7 +33,7 @@ body {
   overflow-x: hidden;
 }
 
-/* Nav */
+/* Navigation */
 nav {
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
@@ -47,18 +48,22 @@ nav {
 }
 
 .brand {
-  font-size: 1.25rem;
+  font-size: 1.3rem;
   font-weight: 800;
   color: var(--primary);
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 10px;
   cursor: pointer;
   letter-spacing: -0.5px;
 }
 
-.brand-icon {
-  font-size: 1.3rem;
+.brand-img {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  object-fit: contain;
+  box-shadow: 0 2px 4px rgba(2, 132, 199, 0.25);
 }
 
 .nav-links {
@@ -81,7 +86,239 @@ nav {
   white-space: nowrap;
 }
 
-/* Buttons - Sized for Mobile Touch Targets */
+/* AI Nav Button */
+.btn-ai-nav {
+  background: linear-gradient(135deg, #0284c7, #6366f1);
+  color: #ffffff;
+  font-weight: 700;
+  border: none;
+  box-shadow: 0 2px 5px rgba(99, 102, 241, 0.35);
+}
+
+.btn-ai-nav:hover {
+  background: linear-gradient(135deg, #0369a1, #4f46e5);
+}
+
+/* Floating AI Button */
+.floating-ai-btn {
+  display: none;
+  position: fixed;
+  bottom: 24px;
+  right: 20px;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0284c7, #6366f1);
+  color: #fff;
+  font-size: 1.5rem;
+  border: none;
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.45);
+  cursor: pointer;
+  z-index: 999;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s;
+}
+
+.floating-ai-btn:active {
+  transform: scale(0.92);
+}
+
+/* AI Chat Drawer */
+.ai-drawer {
+  position: fixed;
+  bottom: -100%;
+  left: 0;
+  right: 0;
+  height: 80vh;
+  max-height: 640px;
+  background: #ffffff;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--border);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  transition: bottom 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (min-width: 768px) {
+  .ai-drawer {
+    left: auto;
+    right: 24px;
+    bottom: -100%;
+    width: 400px;
+    height: 560px;
+    border-radius: 20px;
+  }
+}
+
+.ai-drawer.open {
+  bottom: 0;
+}
+
+@media (min-width: 768px) {
+  .ai-drawer.open {
+    bottom: 85px;
+  }
+}
+
+.ai-drawer-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f8fafc;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+}
+
+.ai-header-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.key-status-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.key-chip {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+
+.key-chip-ready {
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+}
+
+.key-chip-wait {
+  background: #fefce8;
+  color: #ca8a04;
+  border: 1px solid #fef08a;
+}
+
+.key-chip-none {
+  background: #f1f5f9;
+  color: #94a3b8;
+}
+
+.btn-icon {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.ai-close-btn {
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+/* Collapsible Settings Panel */
+.ai-key-settings-panel {
+  padding: 12px 16px;
+  background: #f8fafc;
+  border-bottom: 1px solid var(--border);
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+/* Quick Suggestion Chips */
+.ai-chips-scroll {
+  display: flex;
+  gap: 6px;
+  padding: 8px 14px;
+  overflow-x: auto;
+  background: #ffffff;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.ai-chip {
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  color: var(--primary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.ai-chip:active {
+  background: #e0f2fe;
+}
+
+/* Chat Messages */
+.ai-chat-body {
+  flex: 1;
+  padding: 14px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ai-msg {
+  max-width: 85%;
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-size: 0.88rem;
+  line-height: 1.4;
+}
+
+.ai-msg-bot {
+  background: #f1f5f9;
+  color: var(--text);
+  align-self: flex-start;
+  border-bottom-left-radius: 4px;
+}
+
+.ai-msg-user {
+  background: linear-gradient(135deg, #0284c7, #6366f1);
+  color: #ffffff;
+  align-self: flex-end;
+  border-bottom-right-radius: 4px;
+}
+
+.ai-chat-footer {
+  padding: 10px 14px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 8px;
+  background: #ffffff;
+}
+
+.ai-chat-footer input {
+  flex: 1;
+  font-size: 16px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.btn-ai-send {
+  background: var(--primary);
+  color: #fff;
+  border-radius: 8px;
+  padding: 8px 14px;
+}
+
+/* Buttons */
 .btn {
   background: var(--primary);
   color: #ffffff;
@@ -166,7 +403,7 @@ nav {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Hero Landing */
+/* Hero */
 .hero {
   text-align: center;
   padding: 24px 8px 40px;
@@ -283,7 +520,6 @@ label {
   font-weight: 600;
 }
 
-/* 16px font size prevents automatic iOS/Android Chrome zoom */
 input, select {
   background: #ffffff;
   border: 1px solid var(--border);
@@ -446,7 +682,7 @@ input:focus, select:focus {
   font-weight: 600;
 }
 
-/* Goal Progress Bar & Dynamic Red/Green States */
+/* Goal Progress Bar */
 .goal-card {
   background: #ffffff;
   border: 1px solid var(--border);
@@ -637,23 +873,25 @@ th {
     width: 100%;
   }
 }
-
-/* Navigation Brand Logo */
-.brand {
-  font-size: 1.3rem;
-  font-weight: 800;
-  color: var(--primary);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-  letter-spacing: -0.5px;
+/* AI Daily Quota Badge */
+.ai-quota-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+  display: inline-block;
+  margin-top: 2px;
+  transition: all 0.2s ease;
 }
 
-.brand-img {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  object-fit: contain;
-  box-shadow: 0 2px 4px rgba(2, 132, 199, 0.25);
+.ai-quota-active {
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+}
+
+.ai-quota-max {
+  background: #fefce8;
+  color: #ca8a04;
+  border: 1px solid #fef08a;
 }
