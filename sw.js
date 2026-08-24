@@ -7,6 +7,7 @@ const CACHE_NAME = 'logit-gh-v5';
 const STATIC_ASSETS = [
   './',
   './index.html',
+  './ai.html',
   './manifest.json',
   './css/style.css',
   './js/api.js',
