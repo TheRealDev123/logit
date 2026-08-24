@@ -13,6 +13,7 @@ const STATIC_ASSETS = [
   './js/auth.js',
   './js/reminders.js',
   './js/app.js',
+  './js/ai.js',
   './js/pwa.js',
   './icons/icon-192x192.png',
   './icons/icon-512x512.png',
