@@ -1,5 +1,5 @@
 /**
- * Log it - Authentication & 2-Step Password Reset Handlers
+ * Log it - Authentication & Logged-In AI Visibility
  */
 let currentUser = JSON.parse(localStorage.getItem("logit_user") || "null");
 
@@ -7,14 +7,21 @@ function updateNav() {
   const loggedOutNav = document.getElementById("loggedOutNav");
   const loggedInNav = document.getElementById("loggedInNav");
   const navUserName = document.getElementById("navUserName");
+  const floatingAiBtn = document.getElementById("floatingAiBtn");
+  const aiModal = document.getElementById("aiModal");
 
   if (currentUser) {
+    // Show user info & AI options
     loggedOutNav.style.display = "none";
     loggedInNav.style.display = "flex";
     navUserName.textContent = `@${currentUser.username}`;
+    if (floatingAiBtn) floatingAiBtn.style.display = "flex";
   } else {
+    // HIDE ALL AI BUTTONS & ICONS WHEN LOGGED OUT
     loggedOutNav.style.display = "flex";
     loggedInNav.style.display = "none";
+    if (floatingAiBtn) floatingAiBtn.style.display = "none";
+    if (aiModal) aiModal.classList.remove("open");
   }
 }
 
@@ -99,7 +106,6 @@ async function handleForgotPassword(e) {
 
     alert(data.message || "A 6-digit code has been sent to your email!");
     
-    // Automatically transition to Step 2 Reset Screen and pre-fill username
     document.getElementById("resetIdentifier").value = identifier;
     document.getElementById("resetCode").value = "";
     document.getElementById("resetNewPassword").value = "";
