@@ -2,22 +2,14 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <!-- Optimized for Google Pixel 8a and mobile screens -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
   <meta name="theme-color" content="#0284c7" />
   <title>Log it — Health & Habit Tracker</title>
   
-  <!-- Custom Logo Favicons -->
   <link rel="icon" type="image/png" href="icons/icon-192x192.png" />
   <link rel="apple-touch-icon" href="icons/icon-192x192.png" />
-  
-  <!-- Web App Manifest -->
   <link rel="manifest" href="./manifest.json" />
-  
-  <!-- Light Mode Stylesheet -->
   <link rel="stylesheet" href="css/style.css" />
-  
-  <!-- Chart.js CDN for Weight Graphs -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -30,16 +22,16 @@
     </div>
     
     <div class="nav-links">
-      <!-- Logged-Out Navigation (NO AI BUTTONS SHOWN) -->
+      <!-- Logged-Out Navigation (No AI Buttons) -->
       <div id="loggedOutNav" style="display: flex; gap: 8px;">
         <button class="btn btn-outline btn-sm" onclick="showView('login')">Sign In</button>
         <button class="btn btn-sm" onclick="showView('signup')">Sign Up</button>
       </div>
       
-      <!-- Logged-In Navigation (AI BUTTON APPEARS ONLY WHEN LOGGED IN) -->
+      <!-- Logged-In Navigation (AI Button with BETA badge) -->
       <div id="loggedInNav" style="display: none; align-items: center; gap: 8px;">
         <button class="btn btn-sm btn-ai-nav" onclick="toggleAiDrawer()">
-          🤖 Log it AI
+          🤖 Log it AI <span class="beta-badge">BETA</span>
         </button>
         <span id="navUserName" class="user-badge">@user</span>
         <button class="btn btn-outline btn-sm" onclick="logout()">Log Out</button>
@@ -47,25 +39,29 @@
     </div>
   </nav>
 
-  <!-- Floating Log it AI Assistant Button (Bottom Right - Hidden until logged in) -->
+  <!-- Floating Log it AI Button (Bottom Right) -->
   <button id="floatingAiBtn" class="floating-ai-btn" onclick="toggleAiDrawer()" title="Open Log it AI" style="display: none;">
     🤖
   </button>
 
-  <!-- Log it AI Assistant Chat Drawer (Dual Engine with 10 msgs/day Gemini Quota) -->
+  <!-- Log it AI Assistant Chat Drawer -->
   <div id="aiModal" class="ai-drawer">
     <div class="ai-drawer-header">
       <div class="ai-header-title">
         <span style="font-size: 1.3rem;">🤖</span>
         <div>
-          <h3>Log it AI</h3>
+          <h3>Log it AI <span class="beta-badge">BETA</span></h3>
           <span id="aiDailyQuotaBadge" class="ai-quota-badge ai-quota-active">⚡ Gemini: 0/10 today</span>
         </div>
       </div>
-      <button class="ai-close-btn" onclick="toggleAiDrawer()">&times;</button>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <!-- Link to Full Screen ai.html -->
+        <a href="ai.html" class="btn-fullscreen-link" title="Open Full Screen AI">↗ Full Screen</a>
+        <button class="ai-close-btn" onclick="toggleAiDrawer()">&times;</button>
+      </div>
     </div>
 
-    <!-- Suggested Quick Action Chips -->
+    <!-- Quick Action Chips -->
     <div class="ai-chips-scroll">
       <button class="ai-chip" onclick="sendQuickPrompt('Log 70 kg today')">⚖️ Log 70 kg</button>
       <button class="ai-chip" onclick="sendQuickPrompt('Set goal to 65 kg')">🎯 Set goal 65 kg</button>
@@ -74,23 +70,29 @@
       <button class="ai-chip" onclick="sendQuickPrompt('Set morning alert to 8:30 AM')">⏰ Morning 8:30 AM</button>
     </div>
 
-    <!-- Chat Messages History -->
+    <!-- Chat Messages -->
     <div id="aiChatMessages" class="ai-chat-body">
       <div class="ai-msg ai-msg-bot">
-        👋 Hi! I'm **Log it AI**. I can log your weights, update your goals, set alert times, or check off your routines!
+        👋 Hi! I'm **Log it AI** <span class="beta-badge">BETA</span>. Tell me to log weights, update goals, set alert times, or check off your routines!
       </div>
     </div>
 
-    <!-- Chat Input Form -->
-    <form class="ai-chat-footer" onsubmit="handleAiPromptSubmit(event)">
-      <input type="text" id="aiChatInput" placeholder="Ask AI to log weight, set goal, change times..." autocomplete="off" />
-      <button type="submit" class="btn btn-sm btn-ai-send">Send</button>
-    </form>
+    <!-- Chat Input Form & Disclaimer -->
+    <div class="ai-footer-container">
+      <form class="ai-chat-footer" onsubmit="handleAiPromptSubmit(event)">
+        <input type="text" id="aiChatInput" placeholder="Ask AI to log weight, set goal, change times..." autocomplete="off" />
+        <button type="submit" class="btn btn-sm btn-ai-send">Send</button>
+      </form>
+      <!-- Disclaimer Text Under Box -->
+      <div class="ai-disclaimer">
+        Log it AI can make mistakes. Verify important health logs.
+      </div>
+    </div>
   </div>
 
   <main class="container">
 
-    <!-- 1. HOME / LANDING VIEW -->
+    <!-- 1. HOME VIEW -->
     <section id="homeView" class="view-section active">
       <div class="hero">
         <div class="hero-tag">🎯 Health & Habit Tracking</div>
@@ -106,8 +108,8 @@
         <div class="features-grid">
           <div class="feature-card">
             <div class="feature-icon">🤖</div>
-            <h3>Built-In Log it AI</h3>
-            <p>Speak or type to log your weight, update goals, or adjust schedules automatically.</p>
+            <h3>Log it AI <span class="beta-badge">BETA</span></h3>
+            <p>Use the chat drawer or full-screen AI to log weight, set goals, or update schedules automatically.</p>
           </div>
           <div class="feature-card">
             <div class="feature-icon">🎯</div>
@@ -137,7 +139,6 @@
           <div class="form-group">
             <div style="display: flex; justify-content: space-between; align-items: center;">
               <label for="loginPassword" style="margin-bottom: 0;">Password</label>
-              <!-- Link to Forgot Password Step 1 -->
               <a href="#" onclick="showView('forgot')" style="font-size: 0.8rem; color: var(--primary); text-decoration: none; font-weight: 600;">Forgot Password?</a>
             </div>
             <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password" required />
@@ -151,7 +152,7 @@
       </div>
     </section>
 
-    <!-- 3. FORGOT PASSWORD STEP 1 (REQUEST 6-DIGIT CODE) -->
+    <!-- 3. FORGOT PASSWORD STEP 1 -->
     <section id="forgotView" class="view-section">
       <div class="form-box">
         <h2>Forgot Password?</h2>
@@ -171,7 +172,7 @@
       </div>
     </section>
 
-    <!-- 4. RESET PASSWORD STEP 2 (ENTER CODE & SET NEW PASSWORD) -->
+    <!-- 4. RESET PASSWORD STEP 2 -->
     <section id="resetView" class="view-section">
       <div class="form-box">
         <h2>Set New Password</h2>
@@ -203,7 +204,7 @@
       </div>
     </section>
 
-    <!-- 5. SIGN UP VIEW (ALLOWS MULTIPLE ACCOUNTS PER EMAIL) -->
+    <!-- 5. SIGN UP VIEW -->
     <section id="signupView" class="view-section">
       <div class="form-box">
         <h2>Create an Account</h2>
@@ -235,10 +236,9 @@
       </div>
     </section>
 
-    <!-- 6. DASHBOARD VIEW (AUTHENTICATED) -->
+    <!-- 6. DASHBOARD VIEW -->
     <section id="dashView" class="view-section">
       
-      <!-- Status Top Header -->
       <div class="dash-header">
         <div class="sync-status">
           <span class="sync-dot" id="syncDot"></span>
@@ -249,7 +249,7 @@
         </button>
       </div>
 
-      <!-- Toothbrush Reminder Card with Custom Times & Blue Test Alert Button -->
+      <!-- Toothbrush Reminder Card -->
       <div class="card brush-banner">
         <div class="brush-content">
           <div>
@@ -282,7 +282,6 @@
           </div>
         </div>
 
-        <!-- Custom Alert Time Editor Panel -->
         <div id="timeSettingsPanel" class="time-settings-panel" style="display: none;">
           <form onsubmit="handleSaveCustomTimes(event)" class="time-settings-form">
             <div class="time-inputs-container">
@@ -300,7 +299,7 @@
         </div>
       </div>
 
-      <!-- Goal Progress Card (Red Bar when Over Weight) -->
+      <!-- Goal Progress Card -->
       <div class="card goal-card">
         <div class="goal-header">
           <div>
@@ -318,7 +317,6 @@
           </form>
         </div>
 
-        <!-- Dynamic Progress Bar -->
         <div class="progress-bar-bg">
           <div class="progress-bar-fill" id="goalProgressBar" style="width: 0%;"></div>
         </div>
@@ -330,7 +328,7 @@
         </div>
       </div>
 
-      <!-- Dashboard Main Grid: Log Form + Chart/Stats -->
+      <!-- Dashboard Main Grid -->
       <div class="dash-grid">
         
         <!-- Weight Log Entry Form -->
@@ -406,7 +404,6 @@
 
   </main>
 
-  <!-- Modular Scripts -->
   <script src="js/api.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/reminders.js"></script>
