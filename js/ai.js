@@ -1,5 +1,5 @@
 /**
- * Log it AI — Shared Email Quota & Admin Infinite Usage Engine
+ * Log it AI — Dedicated Tab Assistant Controller
  * File Path: js/ai.js
  */
 
@@ -31,37 +31,20 @@ function updateAiQuotaDisplay() {
   const badge = document.getElementById("aiDailyQuotaBadge");
   if (!badge) return;
 
-  // 👑 ADMIN: Infinite AI Usage
   if (currentUser && currentUser.isAdmin) {
     badge.textContent = `👑 Gemini: ∞ Unlimited (Admin)`;
     badge.className = "ai-quota-badge ai-quota-admin";
     return;
   }
 
-  // Regular Users: Shared Email Quota
   const count = getDailyAiCount();
   if (count < DAILY_GEMINI_LIMIT) {
-    badge.textContent = `⚡ Gemini: ${count}/${DAILY_GEMINI_LIMIT} today (Email shared)`;
+    badge.textContent = `⚡ Gemini: ${count}/${DAILY_GEMINI_LIMIT} today`;
     badge.className = "ai-quota-badge ai-quota-active";
   } else {
     badge.textContent = `⚡ Local AI Active (${DAILY_GEMINI_LIMIT}/${DAILY_GEMINI_LIMIT} used)`;
     badge.className = "ai-quota-badge ai-quota-max";
   }
-}
-
-function toggleAiDrawer() {
-  if (!currentUser) {
-    alert("Please sign in or create an account to use Log it AI.");
-    showView("login");
-    return;
-  }
-  const modal = document.getElementById("aiModal");
-  if (!modal) return;
-  modal.classList.toggle("open");
-  if (modal.classList.contains("open")) {
-    document.getElementById("aiChatInput").focus();
-  }
-  updateAiQuotaDisplay();
 }
 
 function handleAiPromptSubmit(e) {
@@ -105,14 +88,12 @@ async function processAiMessage(prompt) {
   const isAdmin = currentUser.isAdmin === true;
   const currentDailyCount = getDailyAiCount();
 
-  // NON-ADMIN EXCEEDED 10 MSGS -> LOCAL AI
   if (!isAdmin && currentDailyCount >= DAILY_GEMINI_LIMIT) {
     appendAiMessage("bot", `⚡ *[Daily limit of 10 Gemini messages reached for this email. Switched to Built-in Assistant]*`);
     fallbackLocalExecution(prompt);
     return;
   }
 
-  // GEMINI FLASH DISPATCH
   appendAiMessage("bot", isAdmin ? "👑 *Processing with Gemini Flash (Admin Unlimited)...*" : "🤖 *Thinking & processing with Gemini Flash...*");
   const latestWeight = userWeights.length > 0 ? userWeights[userWeights.length - 1].weight : null;
 
@@ -129,16 +110,15 @@ async function processAiMessage(prompt) {
         unit: currentUnit,
         morningTime: morningTime,
         eveningTime: eveningTime,
+        waterToday: `${todayWaterAmount} oz`,
         todayDate: getTodayFormatted()
       }
     });
 
-    // Update shared email daily count
     if (res && res.dailyCount !== undefined && !isAdmin) {
       setDailyAiCount(res.dailyCount);
     }
 
-    // Remove "Thinking..." indicator
     const msgs = document.querySelectorAll(".ai-msg-bot");
     if (msgs.length > 0 && msgs[msgs.length - 1].textContent.includes("Thinking")) {
       msgs[msgs.length - 1].remove();
@@ -199,7 +179,8 @@ async function executeAppAction(parsed) {
       } else {
         userWeights.push({ id: "W_" + Date.now(), date: getTodayFormatted(), weight: weightNum, unit: currentUnit });
       }
-      renderDashboard();
+      renderWeightData();
+      renderDashboardStreakBoard();
     }
   } else if (act === "setGoal") {
     const goalNum = parseFloat(val);
@@ -212,8 +193,17 @@ async function executeAppAction(parsed) {
       goalWeight = goalNum;
       currentUser.goalWeight = goalNum;
       localStorage.setItem("logit_user", JSON.stringify(currentUser));
-      renderDashboard();
+      renderWeightData();
     }
+  } else if (act === "addWater") {
+    const amountNum = parseFloat(val);
+    if (!isNaN(amountNum) && amountNum > 0) {
+      await quickAddWater(amountNum);
+    }
+  } else if (act === "setMood") {
+    const scoreNum = parseInt(val, 10) || 4;
+    const emojiStr = parsed.emoji || "😊";
+    await saveDailyMood(scoreNum, emojiStr);
   } else if (act === "setMorningTime") {
     morningTime = String(val);
     localStorage.setItem("logit_morning_time", morningTime);
@@ -243,7 +233,16 @@ async function executeAppAction(parsed) {
 async function fallbackLocalExecution(rawText) {
   const text = rawText.toLowerCase().trim();
 
-  // 1. Log weight
+  // 1. Water
+  const waterMatch = text.match(/(?:water|drank|drink|glass|hydrated)\s*([0-9]+(?:\.[0-9]+)?)\s*(?:oz|ounces)?/i);
+  if (waterMatch) {
+    const wVal = parseFloat(waterMatch[1]);
+    await executeAppAction({ action: "addWater", value: wVal });
+    appendAiMessage("bot", `💧 Logged **+${wVal} oz** of water! Your daily progress is updated.`);
+    return;
+  }
+
+  // 2. Weight
   const weightMatch = text.match(/(?:log|add|record|enter|weigh|weight|weighed)\s*(?:is|my)?\s*([0-9]+(?:\.[0-9]+)?)\s*(kg|lbs|pounds|kilos)?/i);
   if (weightMatch) {
     const weightVal = parseFloat(weightMatch[1]);
@@ -255,7 +254,7 @@ async function fallbackLocalExecution(rawText) {
     return;
   }
 
-  // 2. Set goal
+  // 3. Goal
   const goalMatch = text.match(/(?:set|change|update|make|my)?\s*(?:goal|target)\s*(?:is|to|weight)?\s*([0-9]+(?:\.[0-9]+)?)\s*(kg|lbs)?/i);
   if (goalMatch && !text.includes("how close")) {
     const goalVal = parseFloat(goalMatch[1]);
@@ -264,7 +263,26 @@ async function fallbackLocalExecution(rawText) {
     return;
   }
 
-  // 3. Morning alert
+  // 4. Mood
+  if (text.includes("mood") || text.includes("feel")) {
+    if (text.includes("great") || text.includes("awesome") || text.includes("amazing")) {
+      await executeAppAction({ action: "setMood", value: 5, emoji: "🤩" });
+      appendAiMessage("bot", "🤩 Logged your mood as **Great**! Keep up the amazing energy!");
+      return;
+    }
+    if (text.includes("good") || text.includes("happy")) {
+      await executeAppAction({ action: "setMood", value: 4, emoji: "😊" });
+      appendAiMessage("bot", "😊 Logged your mood as **Good**!");
+      return;
+    }
+    if (text.includes("okay") || text.includes("fine") || text.includes("neutral")) {
+      await executeAppAction({ action: "setMood", value: 3, emoji: "😐" });
+      appendAiMessage("bot", "😐 Logged your mood as **Okay**.");
+      return;
+    }
+  }
+
+  // 5. Morning alert
   if (text.includes("morning") && (text.includes("reminder") || text.includes("time") || text.includes("alert"))) {
     const t = parseTimeFromText(text);
     if (t) {
@@ -274,7 +292,7 @@ async function fallbackLocalExecution(rawText) {
     }
   }
 
-  // 4. Evening alert
+  // 6. Evening alert
   if ((text.includes("evening") || text.includes("night")) && (text.includes("reminder") || text.includes("time") || text.includes("alert"))) {
     const t = parseTimeFromText(text);
     if (t) {
@@ -284,7 +302,7 @@ async function fallbackLocalExecution(rawText) {
     }
   }
 
-  // 5. Teeth brushing
+  // 7. Teeth brushing
   if (text.includes("brush") || text.includes("teeth")) {
     if (text.includes("morning") || text.includes("am")) {
       executeAppAction({ action: "toggleBrush", period: "morning", value: true });
@@ -298,7 +316,7 @@ async function fallbackLocalExecution(rawText) {
     }
   }
 
-  // 6. Unit switch
+  // 8. Unit switch
   if (text.includes("switch") || text.includes("change unit")) {
     if (text.includes("lb") || text.includes("pound")) {
       switchUnit("lbs");
@@ -312,7 +330,7 @@ async function fallbackLocalExecution(rawText) {
     }
   }
 
-  // 7. Status & progress
+  // 9. Status & progress
   if (text.includes("how close") || text.includes("progress") || text.includes("status") || text.includes("summary")) {
     if (!currentUser || userWeights.length === 0) {
       appendAiMessage("bot", "📊 You haven't logged any weights yet. Tell me *'Log 70 kg'* to get started!");
@@ -321,7 +339,7 @@ async function fallbackLocalExecution(rawText) {
     const start = userWeights[0].weight;
     const current = userWeights[userWeights.length - 1].weight;
     const diff = (current - start).toFixed(1);
-    let reply = `📊 **Current Status:**\n• Start: ${start} ${currentUnit}\n• Current: ${current} ${currentUnit}\n• Total Change: ${diff > 0 ? "+" : ""}${diff} ${currentUnit}\n`;
+    let reply = `📊 **Current Status:**\n• Start: ${start} ${currentUnit}\n• Current: ${current} ${currentUnit}\n• Total Change: ${diff > 0 ? "+" : ""}${diff} ${currentUnit}\n• Water Today: ${todayWaterAmount} oz / ${todayWaterGoal} oz\n`;
     if (goalWeight) {
       const toGoal = (current - goalWeight).toFixed(1);
       reply += current > goalWeight ? `• Goal: ${goalWeight} ${currentUnit} (⚠️ ${Math.abs(toGoal)} ${currentUnit} remaining)` : `• Goal: ${goalWeight} ${currentUnit} (🎉 Goal Met!)`;
@@ -330,7 +348,7 @@ async function fallbackLocalExecution(rawText) {
     return;
   }
 
-  appendAiMessage("bot", `🤖 Ready! You can ask me to log weights (*"Log 70 kg"*), set your goal (*"Set goal to 65 kg"*), or change alert times (*"Morning alert 8 AM"*).`);
+  appendAiMessage("bot", `🤖 Ready! You can ask me to log water (*"Log 16 oz water"*), log weights (*"Log 70 kg"*), set your goal (*"Set goal to 65 kg"*), or change alert times!`);
 }
 
 function parseTimeFromText(str) {
