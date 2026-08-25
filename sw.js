@@ -1,13 +1,12 @@
 /**
- * Log it - GitHub Pages Compatible Service Worker
+ * Log it - Clean Service Worker
  */
 
-const CACHE_NAME = 'logit-gh-v5';
+const CACHE_NAME = 'logit-clean-v6';
 
 const STATIC_ASSETS = [
   './',
   './index.html',
-  './ai.html',
   './manifest.json',
   './css/style.css',
   './js/api.js',
@@ -56,21 +55,5 @@ self.addEventListener('fetch', (event) => {
         return response;
       })
       .catch(() => caches.match(event.request))
-  );
-});
-
-self.addEventListener('notificationclick', (event) => {
-  event.notification.close();
-  event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      for (const client of clientList) {
-        if (client.url && 'focus' in client) {
-          return client.focus();
-        }
-      }
-      if (clients.openWindow) {
-        return clients.openWindow('./');
-      }
-    })
   );
 });
