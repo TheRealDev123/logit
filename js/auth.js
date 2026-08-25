@@ -1,5 +1,6 @@
 /**
- * Log it - Authentication & Admin Badge Support
+ * Log it - Authentication & Workspace Layout Controller
+ * File Path: js/auth.js
  */
 let currentUser = JSON.parse(localStorage.getItem("logit_user") || "null");
 
@@ -7,26 +8,28 @@ function updateNav() {
   const loggedOutNav = document.getElementById("loggedOutNav");
   const loggedInNav = document.getElementById("loggedInNav");
   const navUserName = document.getElementById("navUserName");
-  const floatingAiBtn = document.getElementById("floatingAiBtn");
-  const aiModal = document.getElementById("aiModal");
+  const sidebar = document.getElementById("appSidebar");
 
   if (currentUser) {
+    document.body.classList.remove("is-logged-out");
+    document.body.classList.add("is-logged-in");
+    
     loggedOutNav.style.display = "none";
     loggedInNav.style.display = "flex";
+    if (sidebar) sidebar.classList.remove("is-hidden");
     
-    // Display Admin Badge if Admin Account
     if (currentUser.isAdmin) {
       navUserName.innerHTML = `👑 @${currentUser.username} <span class="admin-badge">ADMIN</span>`;
     } else {
       navUserName.textContent = `@${currentUser.username}`;
     }
-
-    if (floatingAiBtn) floatingAiBtn.style.display = "flex";
   } else {
+    document.body.classList.remove("is-logged-in");
+    document.body.classList.add("is-logged-out");
+    
     loggedOutNav.style.display = "flex";
     loggedInNav.style.display = "none";
-    if (floatingAiBtn) floatingAiBtn.style.display = "none";
-    if (aiModal) aiModal.classList.remove("open");
+    if (sidebar) sidebar.classList.add("is-hidden");
   }
 }
 
@@ -94,7 +97,7 @@ async function handleLogin(e) {
   }
 }
 
-// 3. FORGOT PASSWORD (REQUEST CODE)
+// 3. FORGOT PASSWORD
 async function handleForgotPassword(e) {
   e.preventDefault();
   const identifier = document.getElementById("forgotIdentifier").value.trim().toLowerCase();
@@ -179,3 +182,13 @@ function checkAuthAndRedirect() {
     showView("signup");
   }
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+  updateNav();
+  if (currentUser) {
+    showView("dash");
+    initDashboard();
+  } else {
+    showView("home");
+  }
+});
