@@ -14,396 +14,800 @@
 </head>
 <body>
 
-  <!-- Top Navigation Bar -->
-  <nav>
-    <div class="brand" onclick="showView('home')">
+  <!-- ========================================================= -->
+  <!-- ⏳ GLOBAL LOADER (ONLY SHOWS ON PAGE LOAD / LOGIN) -->
+  <!-- ========================================================= -->
+  <div id="globalLoader" class="loader-overlay" style="display: none;">
+    <div class="loader-card">
+      <div class="loader-spinner-wrap">
+        <div class="loader-spinner"></div>
+        <img src="icons/icon-192x192.png" alt="Log it" class="loader-logo" />
+      </div>
+      <h3 id="loaderTitle">Reading Google Sheet</h3>
+      <p id="loaderSubtitle">Please wait a moment...</p>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- 🔔 IN-APP TOAST NOTIFICATION CONTAINER (REPLACES JS ALERTS) -->
+  <!-- ========================================================= -->
+  <div id="appToastContainer" class="toast-container"></div>
+
+  <!-- ========================================================= -->
+  <!-- 🗑️ CUSTOM IN-APP CONFIRMATION MODAL (REPLACES JS CONFIRMS) -->
+  <!-- ========================================================= -->
+  <div id="appConfirmModal" class="custom-modal-overlay" style="display: none;">
+    <div class="custom-modal-card">
+      <div style="font-size: 2rem; margin-bottom: 8px;">⚠️</div>
+      <h3 id="confirmModalTitle">Are you sure?</h3>
+      <p id="confirmModalText" style="font-size: 0.9rem; color: var(--text-muted); margin: 8px 0 16px;">This action cannot be undone.</p>
+      <div class="custom-modal-actions">
+        <button id="confirmCancelBtn" class="btn btn-sm btn-outline">Cancel</button>
+        <button id="confirmOkBtn" class="btn btn-sm btn-danger">Confirm Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- 🔴 TOP HEADER -->
+  <!-- ========================================================= -->
+  <header class="app-header">
+    <div class="brand" onclick="showView('dash')">
       <img src="icons/icon-192x192.png" alt="Log it Logo" class="brand-img" />
       <span>Log it</span>
     </div>
     
     <div class="nav-links">
-      <!-- Logged-Out Navigation (No AI Buttons) -->
       <div id="loggedOutNav" style="display: flex; gap: 8px;">
         <button class="btn btn-outline btn-sm" onclick="showView('login')">Sign In</button>
         <button class="btn btn-sm" onclick="showView('signup')">Sign Up</button>
       </div>
       
-      <!-- Logged-In Navigation (AI Button with BETA badge) -->
       <div id="loggedInNav" style="display: none; align-items: center; gap: 8px;">
-        <button class="btn btn-sm btn-ai-nav" onclick="toggleAiDrawer()">
-          🤖 Log it AI <span class="beta-badge">BETA</span>
+        <button class="btn btn-sm btn-rewards-nav" onclick="openRewardsModal()">
+          🏆 Rewards & Themes
         </button>
         <span id="navUserName" class="user-badge">@user</span>
         <button class="btn btn-outline btn-sm" onclick="logout()">Log Out</button>
       </div>
     </div>
-  </nav>
+  </header>
 
-  <!-- Floating Log it AI Button (Bottom Right) -->
-  <button id="floatingAiBtn" class="floating-ai-btn" onclick="toggleAiDrawer()" title="Open Log it AI" style="display: none;">
-    🤖
-  </button>
+  <!-- ========================================================= -->
+  <!-- APP WORKSPACE (SIDEBAR + MAIN CONTENT AREA) -->
+  <!-- ========================================================= -->
+  <div class="app-workspace">
+    
+    <!-- 🟡 LEFT SIDEBAR -->
+    <aside id="appSidebar" class="app-sidebar" style="display: none;">
+      <div class="uiverse-radio-group">
+        
+        <label class="uiverse-radio-label">
+          <input type="radio" name="sidebarNav" id="side-dash" checked onchange="showView('dash')" />
+          <div class="uiverse-radio-btn">
+            <span class="icon">📊</span>
+            <span class="text">Dashboard</span>
+          </div>
+        </label>
 
-  <!-- Log it AI Assistant Chat Drawer -->
-  <div id="aiModal" class="ai-drawer">
-    <div class="ai-drawer-header">
-      <div class="ai-header-title">
-        <span style="font-size: 1.3rem;">🤖</span>
-        <div>
-          <h3>Log it AI <span class="beta-badge">BETA</span></h3>
-          <span id="aiDailyQuotaBadge" class="ai-quota-badge ai-quota-active">⚡ Gemini: 0/10 today</span>
+        <label class="uiverse-radio-label">
+          <input type="radio" name="sidebarNav" id="side-weight" onchange="showView('weight')" />
+          <div class="uiverse-radio-btn">
+            <span class="icon">⚖️</span>
+            <span class="text">Weight</span>
+          </div>
+        </label>
+
+        <label class="uiverse-radio-label">
+          <input type="radio" name="sidebarNav" id="side-water" onchange="showView('water')" />
+          <div class="uiverse-radio-btn">
+            <span class="icon">💧</span>
+            <span class="text">Water</span>
+          </div>
+        </label>
+
+        <label class="uiverse-radio-label">
+          <input type="radio" name="sidebarNav" id="side-mood" onchange="showView('mood')" />
+          <div class="uiverse-radio-btn">
+            <span class="icon">😊</span>
+            <span class="text">Mood</span>
+          </div>
+        </label>
+
+        <label class="uiverse-radio-label">
+          <input type="radio" name="sidebarNav" id="side-meds" onchange="showView('meds')" />
+          <div class="uiverse-radio-btn">
+            <span class="icon">💊</span>
+            <span class="text">Meds & Vitamins</span>
+          </div>
+        </label>
+
+        <label class="uiverse-radio-label">
+          <input type="radio" name="sidebarNav" id="side-habits" onchange="showView('habits')" />
+          <div class="uiverse-radio-btn">
+            <span class="icon">⚡</span>
+            <span class="text">2-Min Habits</span>
+          </div>
+        </label>
+
+        <!-- 🤖 DEDICATED LOG IT AI TAB -->
+        <label class="uiverse-radio-label">
+          <input type="radio" name="sidebarNav" id="side-ai" onchange="showView('ai')" />
+          <div class="uiverse-radio-btn uiverse-radio-ai">
+            <span class="icon">🤖</span>
+            <span class="text">Log it AI <span class="beta-badge">BETA</span></span>
+          </div>
+        </label>
+
+      </div>
+    </aside>
+
+    <!-- 🟠 MAIN CONTENT AREA -->
+    <main class="app-main-area">
+
+      <!-- 1. LANDING VIEW -->
+      <section id="homeView" class="view-section active">
+        <div class="hero">
+          <div class="hero-tag">🎯 All-in-One Health, Habit & Streak Platform</div>
+          <h1>Set Your Goals.<br />Effortlessly <span>Log it</span>.</h1>
+          <p>
+            Gamified streaks for water intake, daily mood, smart weight trends, medications, and 2-minute micro habits with 30-day rewards and built-in AI automation.
+          </p>
+          
+          <div class="hero-actions" style="display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; width: 100%;">
+            <button class="btn btn-lg btn-full-mobile" onclick="checkAuthAndRedirect()">Get Started Now &rarr;</button>
+          </div>
+
+          <div class="features-grid">
+            <div class="feature-card">
+              <div class="feature-icon">🤖</div>
+              <h3>Log it AI <span class="beta-badge">BETA</span></h3>
+              <p>Chat directly in the AI tab to log your weights, set goals, or update your routines automatically.</p>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon">💧</div>
+              <h3>Water & Habits</h3>
+              <p>1-tap fluid logging, meds checklists, and 2-minute atomic micro habits.</p>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon">🔥</div>
+              <h3>30-Day Rewards & Freezes</h3>
+              <p>Maintain streaks to earn badges and unlock new themes, protected by monthly streak freezes.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. LOGIN VIEW -->
+      <section id="loginView" class="view-section">
+        <div class="form-box">
+          <h2>Sign In to <span>Log it</span></h2>
+          <p class="form-subtext">Access your personal logs and streaks</p>
+          <form id="loginForm" onsubmit="handleLogin(event)">
+            <div class="form-group">
+              <label for="loginUsername">Username or Email</label>
+              <input type="text" id="loginUsername" placeholder="e.g. alex24 or you@email.com" autocomplete="username" autocapitalize="none" required />
+            </div>
+            <div class="form-group">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <label for="loginPassword" style="margin-bottom: 0;">Password</label>
+                <a href="#" onclick="showView('forgot')" style="font-size: 0.8rem; color: var(--primary); text-decoration: none; font-weight: 600;">Forgot Password?</a>
+              </div>
+              <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password" required />
+            </div>
+            <button type="submit" id="loginBtn" class="btn btn-full">Sign In</button>
+            <p class="form-footer">Don't have an account? <a href="#" onclick="showView('signup')">Sign Up</a></p>
+          </form>
+        </div>
+      </section>
+
+      <!-- 3. SIGNUP VIEW -->
+      <section id="signupView" class="view-section">
+        <div class="form-box">
+          <h2>Create Account</h2>
+          <p class="form-subtext">Start your streaks and habit journey</p>
+          <form id="signupForm" onsubmit="handleSignup(event)">
+            <div class="form-group">
+              <label for="signupName">Full Name</label>
+              <input type="text" id="signupName" placeholder="Alex Morgan" required />
+            </div>
+            <div class="form-group">
+              <label for="signupUsername">Choose a Username</label>
+              <input type="text" id="signupUsername" placeholder="e.g. alex24" pattern="[a-zA-Z0-9_]{3,20}" title="3-20 letters, numbers, or underscores" autocomplete="username" autocapitalize="none" required />
+            </div>
+            <div class="form-group">
+              <label for="signupEmail">Email Address</label>
+              <input type="email" id="signupEmail" placeholder="you@email.com" autocomplete="email" required />
+            </div>
+            <div class="form-group">
+              <label for="signupPassword">Password</label>
+              <input type="password" id="signupPassword" minlength="6" placeholder="At least 6 characters" autocomplete="new-password" required />
+            </div>
+            <button type="submit" id="signupBtn" class="btn btn-full">Create Account</button>
+            <p class="form-footer">Already have an account? <a href="#" onclick="showView('login')">Sign In</a></p>
+          </form>
+        </div>
+      </section>
+
+      <!-- 4. FORGOT PASSWORD VIEW -->
+      <section id="forgotView" class="view-section">
+        <div class="form-box">
+          <h2>Forgot Password?</h2>
+          <p class="form-subtext">Enter your username or email and we will send a 6-digit code to your inbox.</p>
+          <form id="forgotForm" onsubmit="handleForgotPassword(event)">
+            <div class="form-group">
+              <label for="forgotIdentifier">Username or Email Address</label>
+              <input type="text" id="forgotIdentifier" placeholder="e.g. alex24 or you@email.com" autocapitalize="none" required />
+            </div>
+            <button type="submit" id="forgotBtn" class="btn btn-full">Send 6-Digit Code</button>
+            <p class="form-footer"><a href="#" onclick="showView('login')">Back to Sign In</a></p>
+          </form>
+        </div>
+      </section>
+
+      <!-- 5. RESET PASSWORD VIEW -->
+      <section id="resetView" class="view-section">
+        <div class="form-box">
+          <h2>Set New Password</h2>
+          <form id="resetForm" onsubmit="handleResetPasswordWithCode(event)">
+            <div class="form-group">
+              <label for="resetIdentifier">Username or Email</label>
+              <input type="text" id="resetIdentifier" required />
+            </div>
+            <div class="form-group">
+              <label for="resetCode">6-Digit Code</label>
+              <input type="text" id="resetCode" maxlength="6" required style="letter-spacing: 4px; text-align: center; font-weight: bold;" />
+            </div>
+            <div class="form-group">
+              <label for="resetNewPassword">New Password</label>
+              <input type="password" id="resetNewPassword" minlength="6" required />
+            </div>
+            <div class="form-group">
+              <label for="resetConfirmPassword">Confirm Password</label>
+              <input type="password" id="resetConfirmPassword" minlength="6" required />
+            </div>
+            <button type="submit" id="resetBtn" class="btn btn-full">Update Password</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- ========================================================= -->
+      <!-- TAB 1: DASHBOARD -->
+      <!-- ========================================================= -->
+      <section id="dashView" class="view-section">
+        
+        <div class="dash-header">
+          <div class="sync-status">
+            <span class="sync-dot" id="syncDot"></span>
+            <span id="syncText">Connected to Google Sheets</span>
+          </div>
+          <button id="notifyBtn" class="btn btn-outline btn-sm" onclick="requestNotificationPermission()">
+            🔔 Enable Push Reminders
+          </button>
+        </div>
+
+        <!-- Streak Board -->
+        <div class="card">
+          <div class="card-title">
+            <span>🔥 Streak Board & Monthly Rewards</span>
+            <span class="tab-streak-badge" onclick="openRewardsModal()" style="cursor: pointer;">View Badges 🏆</span>
+          </div>
+          <div class="streak-board-grid">
+            
+            <div class="streak-item" onclick="showView('water')">
+              <div class="streak-item-header">
+                <span>💧 Water Intake</span>
+                <strong id="dashWaterStreak">🔥 0 Days</strong>
+              </div>
+              <div class="progress-bar-bg" style="height: 8px;">
+                <div class="progress-bar-fill" id="dashWaterRewardBar" style="width: 0%;"></div>
+              </div>
+              <span class="streak-reward-sub" id="dashWaterRewardLabel">Next reward in 30 days</span>
+            </div>
+
+            <div class="streak-item" onclick="showView('weight')">
+              <div class="streak-item-header">
+                <span>⚖️ Weight Logging</span>
+                <strong id="dashWeightStreak">🔥 0 Days</strong>
+              </div>
+              <div class="progress-bar-bg" style="height: 8px;">
+                <div class="progress-bar-fill" id="dashWeightRewardBar" style="width: 0%;"></div>
+              </div>
+              <span class="streak-reward-sub" id="dashWeightRewardLabel">Next reward in 30 days</span>
+            </div>
+
+            <div class="streak-item" onclick="showView('mood')">
+              <div class="streak-item-header">
+                <span>😊 Daily Mood</span>
+                <strong id="dashMoodStreak">🔥 0 Days</strong>
+              </div>
+              <div class="progress-bar-bg" style="height: 8px;">
+                <div class="progress-bar-fill" id="dashMoodRewardBar" style="width: 0%;"></div>
+              </div>
+              <span class="streak-reward-sub" id="dashMoodRewardLabel">Next reward in 30 days</span>
+            </div>
+
+            <div class="streak-item" onclick="showView('meds')">
+              <div class="streak-item-header">
+                <span>💊 Meds & Habits</span>
+                <strong id="dashMedsStreak">🔥 0 Days</strong>
+              </div>
+              <div class="progress-bar-bg" style="height: 8px;">
+                <div class="progress-bar-fill" id="dashMedsRewardBar" style="width: 0%;"></div>
+              </div>
+              <span class="streak-reward-sub" id="dashMedsRewardLabel">Next reward in 30 days</span>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Quick 1-Tap Logs -->
+        <div class="card">
+          <h2 class="card-title">⚡ 1-Tap Daily Quick Logs</h2>
+          <div class="quick-logs-grid">
+            
+            <div class="quick-log-box">
+              <span class="quick-log-title">💧 Quick Water (+8 oz)</span>
+              <button class="btn btn-sm" onclick="quickAddWater(8)" style="width: 100%;">+8 oz Glass</button>
+            </div>
+
+            <div class="quick-log-box">
+              <span class="quick-log-title">😊 Today's Mood</span>
+              <div class="quick-mood-row">
+                <span class="quick-mood-btn" onclick="saveDailyMood(5, '🤩')">🤩</span>
+                <span class="quick-mood-btn" onclick="saveDailyMood(4, '😊')">😊</span>
+                <span class="quick-mood-btn" onclick="saveDailyMood(3, '😐')">😐</span>
+                <span class="quick-mood-btn" onclick="saveDailyMood(2, '🙁')">🙁</span>
+                <span class="quick-mood-btn" onclick="saveDailyMood(1, '😫')">😫</span>
+              </div>
+            </div>
+
+            <div class="quick-log-box">
+              <span class="quick-log-title">🦷 Toothbrush Check</span>
+              <div style="display: flex; gap: 8px;">
+                <button class="btn btn-sm btn-outline" id="quickBrushAM" onclick="toggleBrushStatus('morning')" style="flex:1;">☀️ AM</button>
+                <button class="btn btn-sm btn-outline" id="quickBrushPM" onclick="toggleBrushStatus('evening')" style="flex:1;">🌙 PM</button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Toothbrush Alert Banner -->
+        <div class="card brush-banner">
+          <div class="brush-content">
+            <div>
+              <div class="brush-title-row">
+                <h2 class="card-title" style="margin-bottom: 0;">🦷 Toothbrush Schedule</h2>
+                <div style="display: flex; gap: 8px;">
+                  <button class="btn btn-sm btn-outline" onclick="toggleTimeSettings()" style="padding: 4px 10px; font-size: 0.78rem;">✏️ Edit Times</button>
+                  <button class="btn btn-sm" onclick="testNotificationNow()" style="padding: 4px 10px; font-size: 0.78rem; background-color: #0284c7; color: #fff; border: none;">🧪 Test Alert</button>
+                </div>
+              </div>
+              <p class="card-desc" style="margin-top: 6px;">Alerts at <strong id="morningTimeLabel">9:30 AM</strong> & <strong id="eveningTimeLabel">9:30 PM</strong>.</p>
+              <div id="countdownDisplay" class="countdown-badge">Calculating reminder...</div>
+            </div>
+          </div>
+
+          <div id="timeSettingsPanel" class="time-settings-panel" style="display: none;">
+            <form onsubmit="handleSaveCustomTimes(event)" class="time-settings-form">
+              <div class="time-inputs-container">
+                <div class="time-input-group">
+                  <label for="morningTimeInput">Morning Alert</label>
+                  <input type="time" id="morningTimeInput" value="09:30" required />
+                </div>
+                <div class="time-input-group">
+                  <label for="eveningTimeInput">Evening Alert</label>
+                  <input type="time" id="eveningTimeInput" value="21:30" required />
+                </div>
+              </div>
+              <button type="submit" class="btn btn-sm btn-full-mobile" style="margin-top: 8px;">Save Alert Times</button>
+            </form>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ========================================================= -->
+      <!-- TAB 2: WEIGHT TRACKER -->
+      <!-- ========================================================= -->
+      <section id="weightView" class="view-section">
+        
+        <div class="tab-header-row">
+          <div>
+            <h2>⚖️ Weight Journey</h2>
+            <span class="tab-streak-badge" id="tabWeightStreak">🔥 0 Day Streak</span>
+          </div>
+          <button class="btn btn-sm btn-outline" onclick="useStreakFreeze('weight')">❄️ Use Freeze (1 Left)</button>
+        </div>
+
+        <div class="card" style="padding: 12px 16px; margin-bottom: 14px;">
+          <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted);">MONTHLY LOGGING CONSISTENCY</span>
+          <div class="calendar-dots-row" id="weightCalDots"></div>
+        </div>
+
+        <div class="card goal-card">
+          <div class="goal-header">
+            <div>
+              <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <h3 class="card-title" style="margin-bottom: 0;">🎯 Target Goal Status</h3>
+                <span id="goalStatusBadge" class="status-pill status-neutral">No Goal Set</span>
+              </div>
+              <p class="card-desc" id="goalSummaryText" style="margin-top: 4px;">Set a target goal to track your trajectory.</p>
+            </div>
+            <form id="goalForm" onsubmit="handleSetGoal(event)" class="goal-input-form">
+              <input type="number" step="0.1" id="goalInput" placeholder="Target weight" required />
+              <button type="submit" id="saveGoalBtn" class="btn btn-sm">Set Goal</button>
+            </form>
+          </div>
+
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="goalProgressBar" style="width: 0%;"></div>
+          </div>
+          
+          <div class="progress-labels">
+            <span id="progressStartLabel">Start: --</span>
+            <span id="progressPctLabel" style="font-weight: 700;">0% completed</span>
+            <span id="progressGoalLabel">Goal: --</span>
+          </div>
+        </div>
+
+        <div class="dash-grid">
+          
+          <div class="card">
+            <h3 class="card-title">Log Weight</h3>
+            <form id="weightForm" onsubmit="handleSaveWeight(event)">
+              <div class="form-group">
+                <label for="weightDate">Date</label>
+                <input type="date" id="weightDate" required />
+              </div>
+              <div class="form-group">
+                <label for="weightVal">Weight (<span id="unitLabel">kg</span>)</label>
+                <input type="number" step="0.1" id="weightVal" placeholder="e.g. 74.2" required />
+              </div>
+              <div class="form-group">
+                <label for="weightUnit">Unit Preference</label>
+                <select id="weightUnit" onchange="switchUnit(this.value)">
+                  <option value="kg">Kilograms (kg)</option>
+                  <option value="lbs">Pounds (lbs)</option>
+                </select>
+              </div>
+              <button type="submit" id="saveWeightBtn" class="btn btn-full">Save to Google Sheets</button>
+            </form>
+          </div>
+
+          <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <h3 class="card-title" style="margin-bottom: 0;">Smart Trend Graph</h3>
+              <label class="toggle-switch">
+                <input type="checkbox" id="trueTrendToggle" checked onchange="renderChart()" />
+                <span class="toggle-slider"></span>
+                <span style="font-size: 0.75rem; font-weight: 700; margin-left: 6px;">Show True Trend</span>
+              </label>
+            </div>
+            
+            <div class="stats-grid">
+              <div class="stat-card">
+                <div class="stat-label">Start</div>
+                <div class="stat-val" id="statStart">--</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Current</div>
+                <div class="stat-val" id="statCurrent">--</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label" id="statToGoalLabel">Difference</div>
+                <div class="stat-val" id="statToGoal">--</div>
+              </div>
+            </div>
+            
+            <div class="chart-container">
+              <canvas id="weightChart"></canvas>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="card">
+          <h3 class="card-title">📋 Weight Logs History</h3>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Weight</th>
+                  <th style="text-align: right;">Action</th>
+                </tr>
+              </thead>
+              <tbody id="historyTableBody">
+                <tr><td colspan="3" class="table-empty">Loading records...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ========================================================= -->
+      <!-- TAB 3: WATER TRACKER -->
+      <!-- ========================================================= -->
+      <section id="waterView" class="view-section">
+        
+        <div class="tab-header-row">
+          <div>
+            <h2>💧 Daily Fluid Intake</h2>
+            <span class="tab-streak-badge" id="tabWaterStreak">🔥 0 Day Streak</span>
+          </div>
+          <button class="btn btn-sm btn-outline" onclick="useStreakFreeze('water')">❄️ Use Freeze (1 Left)</button>
+        </div>
+
+        <div class="card" style="padding: 12px 16px; margin-bottom: 14px;">
+          <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted);">MONTHLY HYDRATION STREAK</span>
+          <div class="calendar-dots-row" id="waterCalDots"></div>
+        </div>
+
+        <div class="dash-grid">
+          
+          <div class="card" style="display: flex; flex-direction: column; align-items: center; text-align: center;">
+            <h3 class="card-title">Today's Hydration Target</h3>
+            
+            <div class="water-circle-container">
+              <svg class="water-circle-svg" viewBox="0 0 100 100">
+                <circle class="water-circle-bg" cx="50" cy="50" r="42"></circle>
+                <circle class="water-circle-bar" id="waterProgressCircle" cx="50" cy="50" r="42"></circle>
+              </svg>
+              <div class="water-circle-text">
+                <span id="waterLoggedAmount">0</span>
+                <small id="waterGoalLabel">/ 64 oz</small>
+              </div>
+            </div>
+            
+            <p id="waterPctText" style="font-size: 0.9rem; font-weight: 700; color: var(--primary); margin-top: 8px;">0% Completed</p>
+          </div>
+
+          <div class="card">
+            <h3 class="card-title">Quick-Tap Fluid Log</h3>
+            <p class="card-desc">Tap a common glass size to log immediately without typing:</p>
+            
+            <div class="water-btn-grid">
+              <button class="btn btn-outline" onclick="quickAddWater(8)">+8 oz (Glass)</button>
+              <button class="btn btn-outline" onclick="quickAddWater(16)">+16 oz (Mug)</button>
+              <button class="btn btn-outline" onclick="quickAddWater(24)">+24 oz (Bottle)</button>
+              <button class="btn btn-outline" onclick="quickAddWater(32)">+32 oz (Large Bottle)</button>
+            </div>
+
+            <div style="display: flex; gap: 8px; margin-top: 14px;">
+              <input type="number" id="customWaterInput" placeholder="Custom oz amount" style="flex: 1;" />
+              <button class="btn" onclick="addCustomWater()">+ Add</button>
+              <button class="btn btn-outline btn-danger" onclick="resetTodayWater()">Reset</button>
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- ========================================================= -->
+      <!-- TAB 4: MOOD & MINDSET -->
+      <!-- ========================================================= -->
+      <section id="moodView" class="view-section">
+        
+        <div class="tab-header-row">
+          <div>
+            <h2>😊 Daily Mood & Mindset</h2>
+            <span class="tab-streak-badge" id="tabMoodStreak">🔥 0 Day Streak</span>
+          </div>
+          <button class="btn btn-sm btn-outline" onclick="useStreakFreeze('mood')">❄️ Use Freeze (1 Left)</button>
+        </div>
+
+        <div class="card text-center" style="text-align: center;">
+          <h3 class="card-title">How do you feel today?</h3>
+          <p class="card-desc">Select 1 emoji to represent your mood for the day:</p>
+          
+          <div class="mood-selector-row">
+            <div class="mood-option" onclick="saveDailyMood(5, '🤩')">
+              <span class="mood-emoji">🤩</span>
+              <span class="mood-label">Great</span>
+            </div>
+            <div class="mood-option" onclick="saveDailyMood(4, '😊')">
+              <span class="mood-emoji">😊</span>
+              <span class="mood-label">Good</span>
+            </div>
+            <div class="mood-option" onclick="saveDailyMood(3, '😐')">
+              <span class="mood-emoji">😐</span>
+              <span class="mood-label">Okay</span>
+            </div>
+            <div class="mood-option" onclick="saveDailyMood(2, '🙁')">
+              <span class="mood-emoji">🙁</span>
+              <span class="mood-label">Bad</span>
+            </div>
+            <div class="mood-option" onclick="saveDailyMood(1, '😫')">
+              <span class="mood-emoji">😫</span>
+              <span class="mood-label">Awful</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 class="card-title">📅 Monthly Mood Calendar</h3>
+          <div class="calendar-dots-row" id="moodCalDots"></div>
+          
+          <div class="mood-insight-box">
+            <strong>💡 Smart Habit Correlation:</strong>
+            <p id="moodCorrelationText" style="font-size: 0.88rem; color: var(--text-muted); margin-top: 4px;">
+              Log your mood alongside water and weight for 3 days to unlock personalized correlation insights!
+            </p>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ========================================================= -->
+      <!-- TAB 5: MEDS & SUPPLEMENTS -->
+      <!-- ========================================================= -->
+      <section id="medsView" class="view-section">
+        
+        <div class="tab-header-row">
+          <div>
+            <h2>💊 Daily Meds & Supplements</h2>
+            <span class="tab-streak-badge" id="tabMedsStreak">🔥 0 Day Streak</span>
+          </div>
+          <button class="btn btn-sm btn-outline" onclick="useStreakFreeze('meds')">❄️ Use Freeze (1 Left)</button>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <span>Today's Prescription & Vitamin Checklist</span>
+            <button class="btn btn-sm btn-outline" onclick="showAddMedForm()">+ Add New Pill</button>
+          </div>
+
+          <div id="addMedFormBox" style="display: none; padding: 12px; background: #f8fafc; border-radius: 8px; margin-bottom: 12px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+              <input type="text" id="newMedName" placeholder="e.g. Vitamin D3" />
+              <select id="newMedSlot">
+                <option value="morning">Morning (8:00 AM)</option>
+                <option value="evening">Evening (8:00 PM)</option>
+              </select>
+            </div>
+            <button class="btn btn-sm" onclick="saveNewMedication()">Save Medication</button>
+          </div>
+
+          <div id="medsListContainer" class="habit-checklist"></div>
+        </div>
+
+      </section>
+
+      <!-- ========================================================= -->
+      <!-- TAB 6: CUSTOM 2-MINUTE HABITS -->
+      <!-- ========================================================= -->
+      <section id="habitsView" class="view-section">
+        
+        <div class="tab-header-row">
+          <div>
+            <h2>⚡ 2-Minute Micro Habits</h2>
+            <span class="tab-streak-badge" id="tabCustomStreak">🔥 0 Day Streak</span>
+          </div>
+          <button class="btn btn-sm btn-outline" onclick="useStreakFreeze('habits')">❄️ Use Freeze (1 Left)</button>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <span>Atomic Micro-Goals (< 2 Minutes)</span>
+            <button class="btn btn-sm btn-outline" onclick="showAddHabitForm()">+ Add Micro-Habit</button>
+          </div>
+
+          <div id="addHabitFormBox" style="display: none; padding: 12px; background: #f8fafc; border-radius: 8px; margin-bottom: 12px;">
+            <input type="text" id="newHabitName" placeholder="e.g. Read 1 Page, 10 Pushups, Stretch 1 min" style="margin-bottom: 8px;" />
+            <button class="btn btn-sm" onclick="saveNewCustomHabit()">Add Habit</button>
+          </div>
+
+          <div id="customHabitsContainer" class="habit-checklist"></div>
+        </div>
+
+      </section>
+
+      <!-- ========================================================= -->
+      <!-- 🤖 TAB 7: EMBEDDED LOG IT AI -->
+      <!-- ========================================================= -->
+      <section id="aiView" class="view-section">
+        
+        <div class="ai-tab-card">
+          
+          <div class="ai-tab-header">
+            <div class="ai-header-title">
+              <span style="font-size: 1.5rem;">🤖</span>
+              <div>
+                <h2 style="font-size: 1.15rem; color: #0f172a; margin: 0;">Log it AI <span class="beta-badge">BETA</span></h2>
+                <span id="aiDailyQuotaBadge" class="ai-quota-badge ai-quota-active">⚡ Gemini: 0/10 today</span>
+              </div>
+            </div>
+            <p class="card-desc" style="margin-top: 4px;">
+              Your built-in AI assistant. Type or ask to log weights, set goals, change alert times, or check off routines!
+            </p>
+          </div>
+
+          <!-- Quick Action Chips -->
+          <div class="ai-chips-scroll">
+            <button class="ai-chip" onclick="sendQuickPrompt('Log 70 kg today')">⚖️ Log 70 kg</button>
+            <button class="ai-chip" onclick="sendQuickPrompt('Log 16 oz water')">💧 Log 16 oz water</button>
+            <button class="ai-chip" onclick="sendQuickPrompt('Set goal to 65 kg')">🎯 Set goal 65 kg</button>
+            <button class="ai-chip" onclick="sendQuickPrompt('My mood is great today')">🤩 Mood is Great</button>
+            <button class="ai-chip" onclick="sendQuickPrompt('I brushed my teeth this morning')">🦷 Brushed teeth</button>
+            <button class="ai-chip" onclick="sendQuickPrompt('Took morning vitamins')">💊 Took vitamins</button>
+            <button class="ai-chip" onclick="sendQuickPrompt('Set morning alert to 8:30 AM')">⏰ Morning 8:30 AM</button>
+          </div>
+
+          <!-- Embedded Chat Stream -->
+          <div id="aiChatMessages" class="ai-tab-chat-body">
+            <div class="ai-msg ai-msg-bot">
+              👋 Hi! I'm **Log it AI** <span class="beta-badge">BETA</span>. Ask me to log your water, mood, weight, meds, or habits!
+            </div>
+          </div>
+
+          <!-- Chat Input Form & Disclaimer -->
+          <div class="ai-tab-footer-wrap">
+            <form class="ai-chat-footer" onsubmit="handleAiPromptSubmit(event)">
+              <input type="text" id="aiChatInput" placeholder="Ask AI to log water, mood, weight, meds, change times..." autocomplete="off" />
+              <button type="submit" class="btn btn-sm btn-ai-send">Send</button>
+            </form>
+            <div class="ai-disclaimer">
+              Log it AI can make mistakes. Verify important health logs.
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+    </main>
+
+  </div>
+
+  <!-- Monthly Rewards & Theme Modal -->
+  <div id="rewardsModal" class="rewards-modal-overlay" style="display: none;">
+    <div class="rewards-modal-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <h2>🏆 Monthly Rewards & Themes</h2>
+        <button class="btn btn-sm btn-outline" onclick="closeRewardsModal()">&times;</button>
+      </div>
+      <p class="card-desc" style="margin-bottom: 16px;">
+        Keep a 30-day streak in any habit this month to unlock custom color themes and badges!
+      </p>
+
+      <div class="rewards-grid">
+        <div class="reward-card">
+          <div class="reward-icon">💧</div>
+          <div class="reward-title">Water Master</div>
+          <div class="reward-status">30 Days Streak</div>
+        </div>
+        <div class="reward-card">
+          <div class="reward-icon">⚖️</div>
+          <div class="reward-title">Weight Master</div>
+          <div class="reward-status">30 Days Streak</div>
+        </div>
+        <div class="reward-card">
+          <div class="reward-icon">🔥</div>
+          <div class="reward-title">Triple Threat</div>
+          <div class="reward-status">3 Tabs 30 Days</div>
+        </div>
+        <div class="reward-card">
+          <div class="reward-icon">👑</div>
+          <div class="reward-title">Log It Legend</div>
+          <div class="reward-status">All Tabs 30 Days</div>
         </div>
       </div>
-      <div style="display: flex; align-items: center; gap: 8px;">
-        <!-- Link to Full Screen ai.html -->
-        <a href="ai.html" class="btn-fullscreen-link" title="Open Full Screen AI">↗ Full Screen</a>
-        <button class="ai-close-btn" onclick="toggleAiDrawer()">&times;</button>
-      </div>
-    </div>
 
-    <!-- Quick Action Chips -->
-    <div class="ai-chips-scroll">
-      <button class="ai-chip" onclick="sendQuickPrompt('Log 70 kg today')">⚖️ Log 70 kg</button>
-      <button class="ai-chip" onclick="sendQuickPrompt('Set goal to 65 kg')">🎯 Set goal 65 kg</button>
-      <button class="ai-chip" onclick="sendQuickPrompt('I brushed my teeth this morning')">🦷 Brushed teeth</button>
-      <button class="ai-chip" onclick="sendQuickPrompt('How close am I to my goal?')">📊 How close am I?</button>
-      <button class="ai-chip" onclick="sendQuickPrompt('Set morning alert to 8:30 AM')">⏰ Morning 8:30 AM</button>
-    </div>
-
-    <!-- Chat Messages -->
-    <div id="aiChatMessages" class="ai-chat-body">
-      <div class="ai-msg ai-msg-bot">
-        👋 Hi! I'm **Log it AI** <span class="beta-badge">BETA</span>. Tell me to log weights, update goals, set alert times, or check off your routines!
-      </div>
-    </div>
-
-    <!-- Chat Input Form & Disclaimer -->
-    <div class="ai-footer-container">
-      <form class="ai-chat-footer" onsubmit="handleAiPromptSubmit(event)">
-        <input type="text" id="aiChatInput" placeholder="Ask AI to log weight, set goal, change times..." autocomplete="off" />
-        <button type="submit" class="btn btn-sm btn-ai-send">Send</button>
-      </form>
-      <!-- Disclaimer Text Under Box -->
-      <div class="ai-disclaimer">
-        Log it AI can make mistakes. Verify important health logs.
+      <h3 style="font-size: 1rem; margin: 18px 0 8px;">🎨 App Themes</h3>
+      <div class="theme-selector-grid">
+        <button class="theme-btn theme-sky" onclick="setAppTheme('sky')">Sky Blue (Default)</button>
+        <button class="theme-btn theme-emerald" onclick="setAppTheme('emerald')">Forest Emerald</button>
+        <button class="theme-btn theme-sunset" onclick="setAppTheme('sunset')">Sunset Coral</button>
+        <button class="theme-btn theme-cyber" onclick="setAppTheme('cyber')">Cyber Indigo</button>
       </div>
     </div>
   </div>
 
-  <main class="container">
-
-    <!-- 1. HOME VIEW -->
-    <section id="homeView" class="view-section active">
-      <div class="hero">
-        <div class="hero-tag">🎯 Health & Habit Tracking</div>
-        <h1>Set Your Goals.<br />Effortlessly <span>Log it</span>.</h1>
-        <p>
-          Track your weight journey, monitor goal progress with color-coded indicators, and receive custom teeth-brushing reminders—synced to Google Sheets.
-        </p>
-        
-        <div class="hero-actions" style="display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; width: 100%;">
-          <button class="btn btn-lg btn-full-mobile" onclick="checkAuthAndRedirect()">Get Started Now &rarr;</button>
-        </div>
-
-        <div class="features-grid">
-          <div class="feature-card">
-            <div class="feature-icon">🤖</div>
-            <h3>Log it AI <span class="beta-badge">BETA</span></h3>
-            <p>Use the chat drawer or full-screen AI to log weight, set goals, or update schedules automatically.</p>
-          </div>
-          <div class="feature-card">
-            <div class="feature-icon">🎯</div>
-            <h3>Smart Goal Tracking</h3>
-            <p>Visual bar turns red if you are over target and green when you achieve it.</p>
-          </div>
-          <div class="feature-card">
-            <div class="feature-icon">⏰</div>
-            <h3>Custom Reminder Times</h3>
-            <p>Choose your morning and evening alert times with browser push notifications.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 2. LOGIN VIEW -->
-    <section id="loginView" class="view-section">
-      <div class="form-box">
-        <h2>Sign In to <span>Log it</span></h2>
-        <p class="form-subtext">Enter your username or email</p>
-        
-        <form id="loginForm" onsubmit="handleLogin(event)">
-          <div class="form-group">
-            <label for="loginUsername">Username or Email</label>
-            <input type="text" id="loginUsername" placeholder="e.g. alex24 or you@email.com" autocomplete="username" autocapitalize="none" required />
-          </div>
-          <div class="form-group">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-              <label for="loginPassword" style="margin-bottom: 0;">Password</label>
-              <a href="#" onclick="showView('forgot')" style="font-size: 0.8rem; color: var(--primary); text-decoration: none; font-weight: 600;">Forgot Password?</a>
-            </div>
-            <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password" required />
-          </div>
-          <button type="submit" id="loginBtn" class="btn btn-full">Sign In</button>
-          
-          <p class="form-footer">
-            Don't have an account? <a href="#" onclick="showView('signup')">Sign Up</a>
-          </p>
-        </form>
-      </div>
-    </section>
-
-    <!-- 3. FORGOT PASSWORD STEP 1 -->
-    <section id="forgotView" class="view-section">
-      <div class="form-box">
-        <h2>Forgot Password?</h2>
-        <p class="form-subtext">Enter your username or email and we will send a 6-digit code to your inbox.</p>
-        
-        <form id="forgotForm" onsubmit="handleForgotPassword(event)">
-          <div class="form-group">
-            <label for="forgotIdentifier">Username or Email Address</label>
-            <input type="text" id="forgotIdentifier" placeholder="e.g. alex24 or you@email.com" autocapitalize="none" required />
-          </div>
-          <button type="submit" id="forgotBtn" class="btn btn-full">Send 6-Digit Code</button>
-          
-          <p class="form-footer">
-            Remembered your password? <a href="#" onclick="showView('login')">Sign In</a>
-          </p>
-        </form>
-      </div>
-    </section>
-
-    <!-- 4. RESET PASSWORD STEP 2 -->
-    <section id="resetView" class="view-section">
-      <div class="form-box">
-        <h2>Set New Password</h2>
-        <p class="form-subtext" id="resetSubtext">Enter the 6-digit code from your email and choose your new password.</p>
-        
-        <form id="resetForm" onsubmit="handleResetPasswordWithCode(event)">
-          <div class="form-group">
-            <label for="resetIdentifier">Username or Email</label>
-            <input type="text" id="resetIdentifier" placeholder="e.g. alex24" autocapitalize="none" required />
-          </div>
-          <div class="form-group">
-            <label for="resetCode">6-Digit Verification Code</label>
-            <input type="text" id="resetCode" placeholder="e.g. 583921" maxlength="6" pattern="[0-9]{6}" title="6 digit numeric code" required style="letter-spacing: 4px; font-weight: 700; font-size: 1.1rem; text-align: center;" />
-          </div>
-          <div class="form-group">
-            <label for="resetNewPassword">New Password</label>
-            <input type="password" id="resetNewPassword" minlength="6" placeholder="At least 6 characters" required />
-          </div>
-          <div class="form-group">
-            <label for="resetConfirmPassword">Confirm New Password</label>
-            <input type="password" id="resetConfirmPassword" minlength="6" placeholder="Re-type new password" required />
-          </div>
-          <button type="submit" id="resetBtn" class="btn btn-full">Update Password</button>
-          
-          <p class="form-footer">
-            Didn't receive a code? <a href="#" onclick="showView('forgot')">Resend Code</a> | <a href="#" onclick="showView('login')">Cancel</a>
-          </p>
-        </form>
-      </div>
-    </section>
-
-    <!-- 5. SIGN UP VIEW -->
-    <section id="signupView" class="view-section">
-      <div class="form-box">
-        <h2>Create an Account</h2>
-        <p class="form-subtext">Enter your details to get started</p>
-        
-        <form id="signupForm" onsubmit="handleSignup(event)">
-          <div class="form-group">
-            <label for="signupName">Full Name</label>
-            <input type="text" id="signupName" placeholder="Alex Morgan" required />
-          </div>
-          <div class="form-group">
-            <label for="signupUsername">Choose a Username</label>
-            <input type="text" id="signupUsername" placeholder="e.g. alex24" pattern="[a-zA-Z0-9_]{3,20}" title="3-20 letters, numbers, or underscores" autocomplete="username" autocapitalize="none" required />
-          </div>
-          <div class="form-group">
-            <label for="signupEmail">Email Address (for password recovery)</label>
-            <input type="email" id="signupEmail" placeholder="you@email.com" autocomplete="email" required />
-          </div>
-          <div class="form-group">
-            <label for="signupPassword">Password</label>
-            <input type="password" id="signupPassword" minlength="6" placeholder="At least 6 characters" autocomplete="new-password" required />
-          </div>
-          <button type="submit" id="signupBtn" class="btn btn-full">Create Account</button>
-          
-          <p class="form-footer">
-            Already have an account? <a href="#" onclick="showView('login')">Sign In</a>
-          </p>
-        </form>
-      </div>
-    </section>
-
-    <!-- 6. DASHBOARD VIEW -->
-    <section id="dashView" class="view-section">
-      
-      <div class="dash-header">
-        <div class="sync-status">
-          <span class="sync-dot" id="syncDot"></span>
-          <span id="syncText">Connected to Google Sheets</span>
-        </div>
-        <button id="notifyBtn" class="btn btn-outline btn-sm" onclick="requestNotificationPermission()">
-          🔔 Enable Push Reminders
-        </button>
-      </div>
-
-      <!-- Toothbrush Reminder Card -->
-      <div class="card brush-banner">
-        <div class="brush-content">
-          <div>
-            <div class="brush-title-row">
-              <h2 class="card-title" style="margin-bottom: 0;">🦷 Toothbrush Schedule</h2>
-              <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                <button class="btn btn-sm btn-outline" onclick="toggleTimeSettings()" style="padding: 4px 10px; font-size: 0.78rem;">
-                  ✏️ Edit Times
-                </button>
-                <button class="btn btn-sm" onclick="testNotificationNow()" style="padding: 4px 10px; font-size: 0.78rem; background-color: #0284c7; color: #ffffff; font-weight: 700; border: none; box-shadow: 0 2px 4px rgba(2,132,199,0.3);">
-                  🧪 Test Alert
-                </button>
-              </div>
-            </div>
-            <p class="card-desc" style="margin-top: 6px;">
-              Alerts at <strong id="morningTimeLabel">9:30 AM</strong> & <strong id="eveningTimeLabel">9:30 PM</strong>.
-            </p>
-            <div id="countdownDisplay" class="countdown-badge">Calculating next reminder...</div>
-          </div>
-          
-          <div class="habit-checklist">
-            <label class="habit-item">
-              <span id="chkMorningLabel">☀️ Morning (9:30 AM)</span>
-              <input type="checkbox" id="brushMorning" onchange="toggleBrushStatus('morning')" />
-            </label>
-            <label class="habit-item">
-              <span id="chkEveningLabel">🌙 Evening (9:30 PM)</span>
-              <input type="checkbox" id="brushEvening" onchange="toggleBrushStatus('evening')" />
-            </label>
-          </div>
-        </div>
-
-        <div id="timeSettingsPanel" class="time-settings-panel" style="display: none;">
-          <form onsubmit="handleSaveCustomTimes(event)" class="time-settings-form">
-            <div class="time-inputs-container">
-              <div class="time-input-group">
-                <label for="morningTimeInput">Morning Alert</label>
-                <input type="time" id="morningTimeInput" value="09:30" required />
-              </div>
-              <div class="time-input-group">
-                <label for="eveningTimeInput">Evening Alert</label>
-                <input type="time" id="eveningTimeInput" value="21:30" required />
-              </div>
-            </div>
-            <button type="submit" class="btn btn-sm btn-full-mobile" style="margin-top: 8px;">Save Alert Times</button>
-          </form>
-        </div>
-      </div>
-
-      <!-- Goal Progress Card -->
-      <div class="card goal-card">
-        <div class="goal-header">
-          <div>
-            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-              <h2 class="card-title" style="margin-bottom: 0;">🎯 Weight Goal Status</h2>
-              <span id="goalStatusBadge" class="status-pill status-neutral">No Goal Set</span>
-            </div>
-            <p class="card-desc" id="goalSummaryText" style="margin-top: 4px;">
-              Set a target goal to track your trajectory.
-            </p>
-          </div>
-          <form id="goalForm" onsubmit="handleSetGoal(event)" class="goal-input-form">
-            <input type="number" step="0.1" id="goalInput" placeholder="Target weight" required />
-            <button type="submit" id="saveGoalBtn" class="btn btn-sm">Set Goal</button>
-          </form>
-        </div>
-
-        <div class="progress-bar-bg">
-          <div class="progress-bar-fill" id="goalProgressBar" style="width: 0%;"></div>
-        </div>
-        
-        <div class="progress-labels">
-          <span id="progressStartLabel">Start: --</span>
-          <span id="progressPctLabel" style="font-weight: 700;">0% completed</span>
-          <span id="progressGoalLabel">Goal: --</span>
-        </div>
-      </div>
-
-      <!-- Dashboard Main Grid -->
-      <div class="dash-grid">
-        
-        <!-- Weight Log Entry Form -->
-        <div class="card">
-          <h2 class="card-title">⚖️ Log Weight</h2>
-          <form id="weightForm" onsubmit="handleSaveWeight(event)">
-            <div class="form-group">
-              <label for="weightDate">Date</label>
-              <input type="date" id="weightDate" required />
-            </div>
-            <div class="form-group">
-              <label for="weightVal">Weight (<span id="unitLabel">kg</span>)</label>
-              <input type="number" step="0.1" id="weightVal" placeholder="e.g. 74.2" required />
-            </div>
-            <div class="form-group">
-              <label for="weightUnit">Unit Preference</label>
-              <select id="weightUnit" onchange="switchUnit(this.value)">
-                <option value="kg">Kilograms (kg)</option>
-                <option value="lbs">Pounds (lbs)</option>
-              </select>
-            </div>
-            <button type="submit" id="saveWeightBtn" class="btn btn-full">Save Entry</button>
-          </form>
-        </div>
-
-        <!-- Metric Cards & Visual Chart -->
-        <div class="card">
-          <h2 class="card-title">📈 Progress Overview</h2>
-          <div class="stats-grid">
-            <div class="stat-card">
-              <div class="stat-label">Start</div>
-              <div class="stat-val" id="statStart">--</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-label">Current</div>
-              <div class="stat-val" id="statCurrent">--</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-label" id="statToGoalLabel">Difference</div>
-              <div class="stat-val" id="statToGoal">--</div>
-            </div>
-          </div>
-          
-          <div class="chart-container">
-            <canvas id="weightChart"></canvas>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- Log History Table -->
-      <div class="card">
-        <h2 class="card-title">📋 Weight Logs History</h2>
-        <div class="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Weight</th>
-                <th style="text-align: right;">Action</th>
-              </tr>
-            </thead>
-            <tbody id="historyTableBody">
-              <tr>
-                <td colspan="3" class="table-empty">Loading records...</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-    </section>
-
-  </main>
-
+  <!-- Modular Scripts -->
   <script src="js/api.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/reminders.js"></script>
