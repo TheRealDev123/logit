@@ -1,119 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#0284c7" />
-  <title>Log it AI — Full-Screen Assistant</title>
-  
-  <link rel="icon" type="image/png" href="icons/icon-192x192.png" />
-  <link rel="apple-touch-icon" href="icons/icon-192x192.png" />
-  <link rel="manifest" href="./manifest.json" />
-  <link rel="stylesheet" href="css/style.css" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</head>
-<body class="ai-page-body">
-
-  <!-- Full-Screen AI Top Bar -->
-  <nav class="ai-fullscreen-nav">
-    <div class="brand" onclick="window.location.href='index.html'">
-      <img src="icons/icon-192x192.png" alt="Log it Logo" class="brand-img" />
-      <span>Log it</span>
-    </div>
-
-    <div style="display: flex; align-items: center; gap: 8px;">
-      <a href="index.html" class="btn btn-sm btn-outline">📊 Dashboard</a>
-      <span id="navUserName" class="user-badge">@user</span>
-      <button class="btn btn-outline btn-sm" onclick="logoutToHome()">Log Out</button>
-    </div>
-  </nav>
-
-  <!-- Full-Screen AI Container -->
-  <div class="ai-fullscreen-container">
-    
-    <!-- AI Header & Live Quota Badge -->
-    <div class="ai-fullscreen-header">
-      <div class="ai-header-title">
-        <span style="font-size: 1.6rem;">🤖</span>
-        <div>
-          <h2>Log it AI <span class="beta-badge">BETA</span></h2>
-          <span id="aiDailyQuotaBadge" class="ai-quota-badge ai-quota-active">⚡ Gemini: 0/10 today</span>
-        </div>
-      </div>
-      <p class="card-desc" style="margin-top: 4px;">
-        Your conversational assistant. Ask to log weight, set goals, change alert times, or check routines!
-      </p>
-    </div>
-
-    <!-- Quick Action Chips -->
-    <div class="ai-chips-scroll" style="border-radius: 12px; margin-bottom: 12px; border: 1px solid var(--border);">
-      <button class="ai-chip" onclick="sendQuickPrompt('Log 70 kg today')">⚖️ Log 70 kg</button>
-      <button class="ai-chip" onclick="sendQuickPrompt('Set goal to 65 kg')">🎯 Set goal 65 kg</button>
-      <button class="ai-chip" onclick="sendQuickPrompt('I brushed my teeth this morning')">🦷 Brushed teeth</button>
-      <button class="ai-chip" onclick="sendQuickPrompt('How close am I to my goal?')">📊 How close am I?</button>
-      <button class="ai-chip" onclick="sendQuickPrompt('Set morning alert to 8:30 AM')">⏰ Morning 8:30 AM</button>
-      <button class="ai-chip" onclick="sendQuickPrompt('Switch to lbs')">🔄 Switch to lbs</button>
-    </div>
-
-    <!-- Full-Screen Chat Messages Stream -->
-    <div id="aiChatMessages" class="ai-chat-body ai-fullscreen-chat">
-      <div class="ai-msg ai-msg-bot">
-        👋 Hi! I'm **Log it AI** <span class="beta-badge">BETA</span>. I have full control over your health logs and routines. Ask me to log your weight, set goals, or update your schedule!
-      </div>
-    </div>
-
-    <!-- Input Footer & Disclaimer -->
-    <div class="ai-fullscreen-footer-wrap">
-      <form class="ai-chat-footer" onsubmit="handleAiPromptSubmit(event)">
-        <input type="text" id="aiChatInput" placeholder="Ask AI to log weight, set goal, change times..." autocomplete="off" autofocus />
-        <button type="submit" class="btn btn-sm btn-ai-send">Send</button>
-      </form>
-      <!-- Disclaimer Text -->
-      <div class="ai-disclaimer">
-        Log it AI can make mistakes. Verify important health logs.
-      </div>
-    </div>
-
-  </div>
-
-  <!-- Background Data Integration Scripts -->
-  <script src="js/api.js"></script>
-  <script src="js/auth.js"></script>
-  <script src="js/reminders.js"></script>
-  <script src="js/app.js"></script>
-  <script src="js/ai.js"></script>
-  <script src="js/pwa.js"></script>
-
   <script>
-    // Guard: Redirect to index.html if user is not signed in
-    document.addEventListener("DOMContentLoaded", async () => {
-      if (!currentUser) {
-        alert("🔒 Please sign in first to access the full-screen Log it AI.");
-        window.location.href = "index.html";
-        return;
-      }
-
-      document.getElementById("navUserName").textContent = `@${currentUser.username}`;
-      updateAiQuotaDisplay();
-
-      // Load background health data so the AI has 100% full context
-      try {
-        const data = await callApi({
-          action: "getUserData",
-          userId: currentUser.userId,
-          todayDate: getTodayFormatted()
-        });
-        userWeights = data.weights || [];
-        goalWeight = data.goalWeight || null;
-      } catch (e) {
-        console.warn("Context sync notice:", e);
-      }
-    });
-
-    function logoutToHome() {
-      logout();
-      window.location.href = "index.html";
-    }
+    // Redirects automatically to the main app AI tab
+    localStorage.setItem("logit_active_tab", "ai");
+    window.location.href = "index.html";
   </script>
-</body>
+</head>
+<body></body>
 </html>
